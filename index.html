@@ -1,1068 +1,442 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agenda Autocar BS - Bloqueio de Passado</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Autocar BS - Simplificada</title>
     <style>
-      /* --- CONFIGURAÇÕES GERAIS --- */
-      :root {
-        --brand-red: #e63946;
-        --brand-dark: #000000;
-        --bg-body: #121212;
-        --bg-card: #1e1e1e;
-        --bg-sidebar: #181818;
-        --bg-header-day: #252525;
-        --bg-item: #2c2c2c;
-        --text-main: #e0e0e0;
-        --text-muted: #999;
-        --border-color: #333;
-        --holiday-color: #ff9800;
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Roboto", Helvetica, Arial, sans-serif;
-      }
-
-      body {
-        background-color: var(--bg-body);
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        color: var(--text-main);
-        overflow: hidden;
-      }
-
-      /* --- HEADER --- */
-      header {
-        background-color: var(--brand-dark);
-        height: 60px;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        padding: 0 25px;
-        color: white;
-        border-bottom: 1px solid #333;
-        flex-shrink: 0;
-        justify-content: space-between;
-      }
-      .logo {
-        font-size: 20px;
-        font-weight: 800;
-        font-style: italic;
-        letter-spacing: -0.5px;
-        cursor: pointer;
-      }
-      .logo span.white {
-        color: #fff;
-      }
-      .logo span.red {
-        color: var(--brand-red);
-      }
-      .avatar {
-        width: 36px;
-        height: 36px;
-        background-color: var(--brand-red);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 14px;
-        border: 2px solid #fff;
-        cursor: default;
-      }
-
-      .layout-container {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-      }
-      .sidebar {
-        width: 300px;
-        background-color: var(--bg-sidebar);
-        border-right: 1px solid var(--border-color);
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-
-      .btn-create-large {
-        background-color: var(--brand-red);
-        color: #fff;
-        padding: 12px;
-        border-radius: 6px;
-        border: none;
-        font-weight: bold;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
-        transition: 0.2s;
-        width: 100%;
-      }
-      .btn-create-large:hover {
-        background-color: #ff4444;
-        transform: scale(1.02);
-      }
-
-      .mini-calendar {
-        background-color: var(--bg-card);
-        border-radius: 8px;
-        padding: 15px;
-        border: 1px solid var(--border-color);
-      }
-      .mini-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        font-size: 14px;
-        font-weight: bold;
-        color: #fff;
-      }
-      .mini-nav {
-        cursor: pointer;
-        color: #888;
-        padding: 5px;
-      }
-      .mini-nav:hover {
-        color: #fff;
-      }
-      .mini-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        text-align: center;
-        gap: 4px;
-      }
-      .mini-day-name {
-        font-size: 10px;
-        color: #666;
-        margin-bottom: 5px;
-      }
-      .mini-cell {
-        height: 30px;
-        width: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        border-radius: 50%;
-        cursor: pointer;
-        color: #ccc;
-        margin: 0 auto;
-        transition: 0.2s;
-      }
-      .mini-cell:hover {
-        background-color: #333;
-        color: #fff;
-      }
-      .mini-cell.selected-week {
-        background-color: var(--brand-red);
-        color: white;
-        font-weight: bold;
-        border-radius: 50%;
-      }
-      .mini-cell.holiday-mark {
-        color: var(--holiday-color);
-        font-weight: bold;
-      }
-      .mini-cell.has-event::after {
-        content: "";
-        position: absolute;
-        bottom: 4px;
-        width: 4px;
-        height: 4px;
-        background-color: white;
-        border-radius: 50%;
-      }
-      .mini-cell.other-month {
-        color: #444;
-      }
-
-      .main-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background-color: var(--bg-body);
-        position: relative;
-      }
-      .top-bar {
-        padding: 15px 25px;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: var(--bg-sidebar);
-      }
-      .week-range-label {
-        font-size: 16px;
-        font-weight: bold;
-        color: #fff;
-        letter-spacing: 0.5px;
-      }
-      .btn-nav-week {
-        background: #2c2c2c;
-        border: 1px solid #444;
-        color: #fff;
-        padding: 6px 14px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-      .btn-nav-week:hover {
-        background: #444;
-        border-color: #666;
-      }
-      .btn-back {
-        color: var(--brand-red);
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .scroll-area {
-        flex: 1;
-        overflow-y: auto;
-        padding: 25px;
-      }
-
-      .day-group {
-        background-color: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        margin-bottom: 25px;
-        overflow: hidden;
-      }
-      .day-label-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        padding: 12px 20px;
-        background-color: var(--bg-header-day);
-        border-bottom: 1px solid #333;
-        transition: 0.2s;
-      }
-      .day-label-row:hover {
-        background-color: #333;
-      }
-      .day-label-text {
-        font-size: 14px;
-        font-weight: bold;
-        color: #ccc;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .day-label-text.today {
-        color: var(--brand-red);
-      }
-      .day-label-text.today::after {
-        content: "HOJE";
-        font-size: 10px;
-        background: var(--brand-red);
-        color: white;
-        padding: 2px 6px;
-        border-radius: 4px;
-      }
-      .holiday-badge {
-        background-color: var(--holiday-color);
-        color: #000;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: bold;
-        vertical-align: middle;
-      }
-      .day-label-icon {
-        font-size: 18px;
-        color: #666;
-      }
-      .day-content-area {
-        padding: 15px;
-      }
-
-      /* === ESTILO CARD PREMIUM === */
-      .agenda-card {
-        background-color: #2c2c2c;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: stretch;
-        border: 1px solid #3a3a3a;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s;
-        overflow: hidden;
-        min-height: 70px;
-      }
-      .agenda-card:hover {
-        transform: translateX(3px);
-        border-color: #555;
-      }
-      .card-strip {
-        width: 6px;
-        background-color: var(--brand-red);
-        flex-shrink: 0;
-      }
-      .card-time-box {
-        width: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-right: 1px solid #444;
-        font-size: 16px;
-        font-weight: bold;
-        color: #fff;
-        background-color: rgba(255, 255, 255, 0.02);
-        flex-shrink: 0;
-      }
-      .card-info-box {
-        flex: 1;
-        padding: 10px 15px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 2px;
-      }
-      .client-name {
-        font-size: 15px;
-        font-weight: 700;
-        color: #ffffff;
-        text-transform: capitalize;
-      }
-      .car-info {
-        font-size: 13px;
-        color: #cccccc;
-        font-weight: 500;
-        text-transform: uppercase;
-      }
-      .obs-info {
-        font-size: 12px;
-        color: #888;
-        font-style: italic;
-        margin-top: 3px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .obs-info::before {
-        content: "💬";
-        font-style: normal;
-        font-size: 10px;
-        opacity: 0.7;
-      }
-      .card-actions {
-        display: flex;
-        align-items: center;
-        padding-right: 15px;
-      }
-      .btn-delete-icon {
-        color: #555;
-        cursor: pointer;
-        padding: 8px;
-        font-size: 18px;
-        transition: 0.2s;
-        border-radius: 4px;
-      }
-      .btn-delete-icon:hover {
-        color: #ff4444;
-        background-color: rgba(255, 0, 0, 0.1);
-      }
-
-      .empty-day-msg {
-        padding: 5px;
-        color: #666;
-        font-style: italic;
-        font-size: 13px;
-      }
-      .closed-day-msg {
-        padding: 5px;
-        color: #d32f2f;
-        font-weight: bold;
-        font-size: 13px;
-        opacity: 0.7;
-      }
-      .holiday-day-msg {
-        padding: 5px;
-        color: var(--holiday-color);
-        font-weight: bold;
-        font-size: 13px;
-        opacity: 0.9;
-      }
-
-      .timeline-slot {
-        display: flex;
-        padding: 15px 0;
-        border-bottom: 1px solid #333;
-      }
-      .ts-time {
-        width: 70px;
-        color: #ccc;
-        font-weight: bold;
-        font-size: 15px;
-        padding-top: 12px;
-        text-align: center;
-      }
-      .ts-content {
-        flex: 1;
-      }
-      .slot-free {
-        border: 1px dashed #444;
-        background-color: rgba(255, 255, 255, 0.03);
-        color: #777;
-        padding: 12px;
-        border-radius: 6px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .slot-free:hover {
-        background-color: #333;
-        border-color: var(--brand-red);
-        color: var(--brand-red);
-      }
-
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 200;
-        display: none;
-        justify-content: center;
-        align-items: center;
-      }
-      .modal-content {
-        background-color: #252525;
-        width: 90%;
-        max-width: 400px;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
-        animation: fadeIn 0.2s;
-        color: #fff;
-        border: 1px solid #444;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
+        /* --- CONFIGURAÇÕES GERAIS --- */
+        :root {
+            --brand-red: #E63946;
+            --brand-dark: #000000;
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
+            --bg-sidebar: #181818;
+            --bg-header-day: #252525;
+            --bg-item: #2c2c2c;
+            --text-main: #e0e0e0;
+            --text-muted: #999;
+            --border-color: #333;
+            --holiday-color: #ff9800;
+            --checklist-color: #ffb74d;
+            --success-green: #4caf50;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .form-group {
-        margin-bottom: 20px;
-      }
-      .form-label {
-        font-size: 13px;
-        color: #ccc;
-        font-weight: bold;
-        margin-bottom: 8px;
-        display: block;
-      }
-      .form-input,
-      .form-select,
-      .form-textarea {
-        width: 100%;
-        padding: 12px;
-        background-color: #1e1e1e;
-        border: 1px solid #444;
-        border-radius: 6px;
-        font-size: 15px;
-        outline: none;
-        color: white;
-      }
-      .form-textarea {
-        height: 70px;
-        resize: none;
-        font-family: inherit;
-      }
-      .btn-save {
-        width: 100%;
-        padding: 14px;
-        background-color: var(--brand-red);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-      .btn-cancel {
-        width: 100%;
-        padding: 10px;
-        background: none;
-        border: none;
-        color: #888;
-        margin-top: 10px;
-        cursor: pointer;
-      }
 
-      @media (max-width: 768px) {
-        .sidebar {
-          display: none;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: var(--bg-body);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+            overflow: hidden;
         }
-      }
-      .fab-mobile {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 56px;
-        height: 56px;
-        background-color: var(--brand-red);
-        border-radius: 50%;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 30px;
-        border: none;
-        z-index: 90;
-      }
-      @media (max-width: 768px) {
-        .fab-mobile {
-          display: flex;
-        }
-      }
+
+        /* --- HEADER --- */
+        header { background-color: var(--brand-dark); height: 60px; width: 100%; display: flex; align-items: center; padding: 0 25px; color: white; border-bottom: 1px solid #333; flex-shrink: 0; justify-content: space-between; }
+        .logo { font-size: 20px; font-weight: 800; font-style: italic; letter-spacing: -0.5px; cursor: pointer; }
+        .logo span.white { color: #fff; } .logo span.red { color: var(--brand-red); }
+        .avatar { width: 36px; height: 36px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; cursor: pointer; }
+        
+        .layout-container { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        
+        .btn-create-large { background-color: var(--brand-red); color: #fff; padding: 12px; border-radius: 6px; border: none; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3); transition: 0.2s; width: 100%; }
+        .btn-create-large:hover { background-color: #ff4444; transform: scale(1.02); }
+
+        .mini-calendar { background-color: var(--bg-card); border-radius: 8px; padding: 15px; border: 1px solid var(--border-color); }
+        .mini-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; font-weight: bold; color: #fff; }
+        .mini-nav { cursor: pointer; color: #888; padding: 5px; } .mini-nav:hover { color: #fff; }
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; gap: 4px; }
+        .mini-day-name { font-size: 10px; color: #666; margin-bottom: 5px; }
+        .mini-cell { height: 30px; width: 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 50%; cursor: pointer; color: #ccc; margin: 0 auto; transition: 0.2s; }
+        .mini-cell:hover { background-color: #333; color: #fff; }
+        .mini-cell.selected-week { background-color: var(--brand-red); color: white; font-weight: bold; border-radius: 50%; }
+        .mini-cell.holiday-mark { color: var(--holiday-color); font-weight: bold; }
+        .mini-cell.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background-color: white; border-radius: 50%; }
+        .mini-cell.other-month { color: #444; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; }
+        .top-bar { padding: 15px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sidebar); }
+        .week-range-label { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 0.5px; }
+        .btn-nav-week { background: #2c2c2c; border: 1px solid #444; color: #fff; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-nav-week:hover { background: #444; border-color: #666; }
+        .btn-back { color: var(--brand-red); cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 25px; }
+
+        /* Blocos do Dia */
+        .day-group { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 25px; overflow: hidden; }
+        .day-label-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 12px 20px; background-color: var(--bg-header-day); border-bottom: 1px solid #333; transition: 0.2s; }
+        .day-label-row:hover { background-color: #333; }
+        .day-label-text { font-size: 14px; font-weight: bold; color: #ccc; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .day-label-text.today { color: var(--brand-red); }
+        .day-label-text.today::after { content: 'HOJE'; font-size: 10px; background: var(--brand-red); color: white; padding: 2px 6px; border-radius: 4px; }
+        .holiday-badge { background-color: var(--holiday-color); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; vertical-align: middle; }
+        .capacity-badge { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 12px; margin-left: 10px; border: 1px solid #444; color: #aaa; background-color: #333; }
+        .capacity-badge.available { color: var(--success-green); border-color: var(--success-green); background-color: rgba(76, 175, 80, 0.1); }
+        .capacity-badge.full { color: var(--brand-red); border-color: var(--brand-red); background-color: rgba(230, 57, 70, 0.1); }
+        .day-label-icon { font-size: 18px; color: #666; }
+        .day-content-area { padding: 15px; }
+
+        /* Card de Agendamento */
+        .agenda-card { background-color: #2c2c2c; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: stretch; border: 1px solid #3a3a3a; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s; overflow: hidden; min-height: 70px; }
+        .agenda-card:hover { transform: translateX(3px); border-color: #555; }
+        
+        .card-strip { width: 6px; background-color: var(--brand-red); flex-shrink: 0; }
+        .agenda-card.checklist .card-strip { background-color: var(--checklist-color); }
+        .card-time-box { width: 70px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #444; font-size: 16px; font-weight: bold; color: #fff; background-color: rgba(255,255,255,0.02); flex-shrink: 0; }
+        .card-info-box { flex: 1; padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+        .client-name { font-size: 15px; font-weight: 700; color: #ffffff; text-transform: capitalize; display: flex; align-items: center; gap: 8px;}
+        .car-info { font-size: 13px; color: #cccccc; font-weight: 500; text-transform: uppercase; }
+        .obs-info { font-size: 12px; color: #888; font-style: italic; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+        .obs-info::before { content: '💬'; font-style: normal; font-size: 10px; opacity: 0.7; }
+        .card-actions { display: flex; align-items: center; padding-right: 15px; }
+        .btn-delete-icon { color: #555; cursor: pointer; padding: 8px; font-size: 18px; transition: 0.2s; border-radius: 4px; }
+        .btn-delete-icon:hover { color: #ff4444; background-color: rgba(255,0,0,0.1); }
+        .badge-checklist { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; background-color: rgba(255, 183, 77, 0.15); color: var(--checklist-color); border: 1px solid var(--checklist-color); padding: 2px 5px; border-radius: 3px; }
+
+        .empty-day-msg { padding: 5px; color: #666; font-style: italic; font-size: 13px; }
+        .closed-day-msg { padding: 5px; color: #d32f2f; font-weight: bold; font-size: 13px; opacity: 0.7; }
+        .holiday-day-msg { padding: 5px; color: var(--holiday-color); font-weight: bold; font-size: 13px; opacity: 0.9; }
+
+        .timeline-slot { display: flex; padding: 15px 0; border-bottom: 1px solid #333; }
+        .ts-time { width: 70px; color: #ccc; font-weight: bold; font-size: 15px; padding-top: 12px; text-align: center;}
+        .ts-content { flex: 1; }
+        .slot-free { border: 1px dashed #444; background-color: rgba(255,255,255,0.03); color: #777; padding: 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+        .slot-free:hover { background-color: #333; border-color: var(--brand-red); color: var(--brand-red); }
+        .slot-free.checklist-slot { border-color: #554433; color: var(--checklist-color); opacity: 0.7; }
+        .slot-free.checklist-slot:hover { border-color: var(--checklist-color); color: var(--checklist-color); opacity: 1; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 200; display: none; justify-content: center; align-items: center; }
+        .modal-content { background-color: #252525; width: 90%; max-width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); animation: fadeIn 0.2s; color: #fff; border: 1px solid #444; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group { margin-bottom: 20px; }
+        .form-label { font-size: 13px; color: #ccc; font-weight: bold; margin-bottom: 8px; display: block; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; background-color: #1e1e1e; border: 1px solid #444; border-radius: 6px; font-size: 15px; outline: none; color: white; }
+        .form-textarea { height: 70px; resize: none; font-family: inherit; }
+        
+        .btn-save { width: 100%; padding: 14px; background-color: var(--brand-red); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-save:hover { background-color: #ff4444; }
+        .btn-cancel { width: 100%; padding: 10px; background: none; border: none; color: #888; margin-top: 10px; cursor: pointer; }
+
+        @media (max-width: 768px) { .sidebar { display: none; } }
+        .fab-mobile { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background-color: var(--brand-red); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; color: white; font-size: 30px; border: none; z-index: 90; }
+        @media (max-width: 768px) { .fab-mobile { display: flex; } }
+
     </style>
-  </head>
-  <body>
+</head>
+<body>
+
     <header>
-      <div class="logo">
-        <span class="white">AUTOCAR</span><span class="red">BS</span>
-      </div>
-      <div class="avatar">A</div>
+        <div class="logo">
+            <span class="white">AUTOCAR</span><span class="red">BS</span>
+        </div>
+        <div class="avatar" onclick="clearData()" title="Limpar Dados">A</div>
     </header>
 
     <div class="layout-container">
-      <aside class="sidebar">
-        <button class="btn-create-large" onclick="openModal()">
-          + Novo Agendamento
-        </button>
-        <div class="mini-calendar">
-          <div class="mini-header">
-            <span id="mini-month-label">Dezembro 2025</span>
-            <div>
-              <span class="mini-nav" onclick="changeMiniMonth(-1)">❮</span
-              ><span class="mini-nav" onclick="changeMiniMonth(1)">❯</span>
+        <aside class="sidebar">
+            <button class="btn-create-large" onclick="openModal()">+ Novo Agendamento</button>
+            <div class="mini-calendar">
+                <div class="mini-header">
+                    <span id="mini-month-label">Dezembro 2025</span>
+                    <div><span class="mini-nav" onclick="changeMiniMonth(-1)">❮</span><span class="mini-nav" onclick="changeMiniMonth(1)">❯</span></div>
+                </div>
+                <div class="mini-grid"><div class="mini-day-name">D</div><div class="mini-day-name">S</div><div class="mini-day-name">T</div><div class="mini-day-name">Q</div><div class="mini-day-name">Q</div><div class="mini-day-name">S</div><div class="mini-day-name">S</div></div>
+                <div id="mini-calendar-days" class="mini-grid" style="margin-top: 5px;"></div>
             </div>
-          </div>
-          <div class="mini-grid">
-            <div class="mini-day-name">D</div>
-            <div class="mini-day-name">S</div>
-            <div class="mini-day-name">T</div>
-            <div class="mini-day-name">Q</div>
-            <div class="mini-day-name">Q</div>
-            <div class="mini-day-name">S</div>
-            <div class="mini-day-name">S</div>
-          </div>
-          <div
-            id="mini-calendar-days"
-            class="mini-grid"
-            style="margin-top: 5px"
-          ></div>
-        </div>
-      </aside>
+        </aside>
 
-      <main class="main-content">
-        <div
-          id="view-weekly-list"
-          style="display: flex; flex-direction: column; height: 100%"
-        >
-          <div class="top-bar">
-            <div class="week-range-label" id="week-range-label">
-              Carregando...
+        <main class="main-content">
+            <div id="view-weekly-list" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="top-bar">
+                    <div class="week-range-label" id="week-range-label">Carregando...</div>
+                    <div class="week-nav-btns">
+                        <button class="btn-nav-week" onclick="changeWeek(-1)">❮</button>
+                        <button class="btn-nav-week" onclick="goToToday()">Hoje</button>
+                        <button class="btn-nav-week" onclick="changeWeek(1)">❯</button>
+                    </div>
+                </div>
+                <div class="scroll-area" id="weekly-content"></div>
             </div>
-            <div class="week-nav-btns">
-              <button class="btn-nav-week" onclick="changeWeek(-1)">❮</button>
-              <button class="btn-nav-week" onclick="goToToday()">Hoje</button>
-              <button class="btn-nav-week" onclick="changeWeek(1)">❯</button>
-            </div>
-          </div>
-          <div class="scroll-area" id="weekly-content"></div>
-        </div>
 
-        <div
-          id="view-day-detail"
-          style="display: none; flex-direction: column; height: 100%"
-        >
-          <div class="top-bar">
-            <div class="week-range-label" id="day-detail-title">...</div>
-            <div class="btn-back" onclick="showWeeklyList()">
-              ❮ Voltar para Semana
+            <div id="view-day-detail" style="display: none; flex-direction: column; height: 100%;">
+                <div class="top-bar">
+                    <div class="week-range-label" id="day-detail-title">...</div>
+                    <div class="btn-back" onclick="showWeeklyList()">❮ Voltar para Semana</div>
+                </div>
+                <div class="scroll-area" id="day-detail-content"></div>
             </div>
-          </div>
-          <div class="scroll-area" id="day-detail-content"></div>
-        </div>
-        <button class="fab-mobile" onclick="openModal()">+</button>
-      </main>
+            <button class="fab-mobile" onclick="openModal()">+</button>
+        </main>
     </div>
 
     <div id="modal-overlay" class="modal-overlay">
-      <div class="modal-content">
-        <h3 style="margin-bottom: 20px">Agendar Serviço</h3>
-        <div class="form-group">
-          <label class="form-label">Data e Hora</label>
-          <div style="display: flex; gap: 10px">
-            <input type="date" id="input-date" class="form-input" />
-            <select id="input-time" class="form-select" style="width: 100px">
-              <option value="08:00">08:00</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
-              <option value="11:00">11:00</option>
-              <option value="13:00">13:00</option>
-              <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00">16:00</option>
-              <option value="17:00">17:00</option>
-              <option value="18:00">18:00</option>
-            </select>
-          </div>
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">Agendar Serviço</h3>
+            
+            <div class="form-group">
+                <label class="form-label">Data e Hora</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="date" id="input-date" class="form-input">
+                    <select id="input-time" class="form-select" style="flex: 1;">
+                        <option value="" disabled selected>Horário...</option>
+                        <option value="07:00">07:00 - Checklist</option>
+                        <option value="08:00">08:00 - Checklist</option>
+                        <option disabled>------------------------</option>
+                        <option value="09:00">09:00 - Execução</option>
+                        <option value="10:00">10:00 - Execução</option>
+                        <option value="11:00">11:00 - Execução</option>
+                        <option value="13:00">13:00 - Execução</option>
+                        <option value="14:00">14:00 - Execução</option>
+                        <option value="15:00">15:00 - Execução</option>
+                        <option value="16:00">16:00 - Execução</option>
+                        <option value="17:00">17:00 - Execução</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group"><label class="form-label">Nome do Cliente</label><input type="text" id="input-client" class="form-input" placeholder="Ex: João da Silva"></div>
+            <div class="form-group"><label class="form-label">Veículo</label><input type="text" id="input-car" class="form-input" placeholder="Ex: Gol G5"></div>
+            <div class="form-group"><label class="form-label">Observação / Defeito</label><textarea id="input-desc" class="form-textarea" placeholder="Ex: Barulho na roda..."></textarea></div>
+
+            <button type="button" class="btn-save" onclick="saveAppointment()">Confirmar Agendamento</button>
+            <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Nome do Cliente</label
-          ><input
-            type="text"
-            id="input-client"
-            class="form-input"
-            placeholder="Ex: João da Silva"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Veículo</label
-          ><input
-            type="text"
-            id="input-car"
-            class="form-input"
-            placeholder="Ex: Gol G5"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Observação / Defeito</label
-          ><textarea
-            id="input-desc"
-            class="form-textarea"
-            placeholder="Ex: Barulho na roda..."
-          ></textarea>
-        </div>
-        <button class="btn-save" onclick="saveAppointment()">
-          Salvar Agendamento
-        </button>
-        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      </div>
     </div>
 
     <script>
-      const WEEK_DAYS = [
-        "Domingo",
-        "Segunda",
-        "Terça",
-        "Quarta",
-        "Quinta",
-        "Sexta",
-        "Sábado",
-      ];
-      const MONTHS = [
-        "Jan",
-        "Fev",
-        "Mar",
-        "Abr",
-        "Mai",
-        "Jun",
-        "Jul",
-        "Ago",
-        "Set",
-        "Out",
-        "Nov",
-        "Dez",
-      ];
-      const FULL_MONTHS = [
-        "Janeiro",
-        "Fevereiro",
-        "Março",
-        "Abril",
-        "Maio",
-        "Junho",
-        "Julho",
-        "Agosto",
-        "Setembro",
-        "Outubro",
-        "Novembro",
-        "Dezembro",
-      ];
-      const FIXED_HOLIDAYS = {
-        "01-01": "Confraternização Universal",
-        "04-21": "Tiradentes",
-        "05-01": "Dia do Trabalho",
-        "09-07": "Independência do Brasil",
-        "10-12": "Nossa Sra. Aparecida",
-        "11-02": "Finados",
-        "11-15": "Proclamação da República",
-        "12-25": "Natal",
-      };
+        // CONFIG
+        const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const FULL_MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const FIXED_HOLIDAYS = {'01-01': 'Confraternização Universal','04-21': 'Tiradentes','05-01': 'Dia do Trabalho','09-07': 'Independência do Brasil','10-12': 'Nossa Sra. Aparecida','11-02': 'Finados','11-15': 'Proclamação da República','12-25': 'Natal'};
+        
+        let appointments = [];
+        let currentWeekStart = new Date(); currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+        let miniCalendarMonth = new Date();
 
-      let appointments = [];
-      let currentWeekStart = new Date();
-      currentWeekStart.setDate(
-        currentWeekStart.getDate() - currentWeekStart.getDay()
-      );
-      let miniCalendarMonth = new Date();
-
-      function init() {
-        loadData();
-        renderWeeklyList();
-        renderMiniCalendar();
-      }
-      function loadData() {
-        const stored = localStorage.getItem("autocar_agenda_v9");
-        if (stored) appointments = JSON.parse(stored);
-      }
-      function saveToStorage() {
-        localStorage.setItem("autocar_agenda_v9", JSON.stringify(appointments));
-      }
-      function formatDateKey(dateObj) {
-        return dateObj.toISOString().slice(0, 10);
-      }
-      function getHolidayName(dateObj) {
-        const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
-        const dd = String(dateObj.getDate()).padStart(2, "0");
-        const key = `${mm}-${dd}`;
-        return FIXED_HOLIDAYS[key] || null;
-      }
-
-      function showWeeklyList() {
-        document.getElementById("view-weekly-list").style.display = "flex";
-        document.getElementById("view-day-detail").style.display = "none";
-        renderWeeklyList();
-        renderMiniCalendar();
-      }
-      function openDayDetail(dateKey, prettyDate, dayIndex, holidayName) {
-        if (dayIndex === 0 || dayIndex === 6) {
-          alert("Oficina Fechada no fim de semana.");
-          return;
+        function init() { loadData(); renderWeeklyList(); renderMiniCalendar(); }
+        
+        function loadData() { 
+            const stored = localStorage.getItem('autocar_agenda_v15'); 
+            if (stored) { try { appointments = JSON.parse(stored); } catch(e) { appointments = []; } }
         }
-        if (holidayName) {
-          alert(`Oficina Fechada: ${holidayName}`);
-          return;
+        function saveToStorage() { localStorage.setItem('autocar_agenda_v15', JSON.stringify(appointments)); }
+        function formatDateKey(dateObj) { return dateObj.toISOString().slice(0, 10); }
+        function getHolidayName(dateObj) { const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); const dd = String(dateObj.getDate()).padStart(2, '0'); const key = `${mm}-${dd}`; return FIXED_HOLIDAYS[key] || null; }
+
+        function showWeeklyList() { document.getElementById('view-weekly-list').style.display = 'flex'; document.getElementById('view-day-detail').style.display = 'none'; renderWeeklyList(); renderMiniCalendar(); }
+        function openDayDetail(dateKey, prettyDate, dayIndex, holidayName) {
+            if(dayIndex === 0 || dayIndex === 6) { alert('Oficina Fechada no fim de semana.'); return; }
+            if(holidayName) { alert(`Oficina Fechada: ${holidayName}`); return; }
+            document.getElementById('view-weekly-list').style.display = 'none'; document.getElementById('view-day-detail').style.display = 'flex';
+            document.getElementById('day-detail-title').innerHTML = `VISÃO DE: <span style="color:#fff">${prettyDate.toUpperCase()}</span>`;
+            renderDayTimeline(dateKey);
         }
-        document.getElementById("view-weekly-list").style.display = "none";
-        document.getElementById("view-day-detail").style.display = "flex";
-        document.getElementById(
-          "day-detail-title"
-        ).innerHTML = `VISÃO DE: <span style="color:#fff">${prettyDate.toUpperCase()}</span>`;
-        renderDayTimeline(dateKey);
-      }
-      function changeWeek(delta) {
-        currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
-        renderWeeklyList();
-        renderMiniCalendar();
-      }
-      function goToToday() {
-        currentWeekStart = new Date();
-        currentWeekStart.setDate(
-          currentWeekStart.getDate() - currentWeekStart.getDay()
-        );
-        renderWeeklyList();
-        renderMiniCalendar();
-      }
+        function changeWeek(delta) { currentWeekStart.setDate(currentWeekStart.getDate() + (delta * 7)); renderWeeklyList(); renderMiniCalendar(); }
+        function goToToday() { currentWeekStart = new Date(); currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); renderWeeklyList(); renderMiniCalendar(); }
 
-      /* --- RENDER WEEKLY LIST --- */
-      function renderWeeklyList() {
-        const container = document.getElementById("weekly-content");
-        container.innerHTML = "";
-        const days = [];
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(currentWeekStart);
-          d.setDate(d.getDate() + i);
-          days.push(d);
+        /* --- SALVAR SIMPLES (SEM DURAÇÃO) --- */
+        function saveAppointment() {
+            try {
+                const dateStr = document.getElementById('input-date').value;
+                const time = document.getElementById('input-time').value;
+                const client = document.getElementById('input-client').value;
+                const car = document.getElementById('input-car').value;
+                const desc = document.getElementById('input-desc').value;
+
+                if(!dateStr || !client || !car || !time) { alert('Preencha os dados.'); return; }
+
+                // Validações
+                const d = new Date(dateStr + 'T00:00:00');
+                const now = new Date(); now.setHours(0,0,0,0);
+                if(d < now) { alert('Data passada.'); return; }
+                if(getHolidayName(d)) { alert('Feriado.'); return; }
+                const dayIdx = d.getDay(); if(dayIdx === 0 || dayIdx === 6) { alert('Fim de semana.'); return; }
+
+                // Colisão de Horário
+                const busy = appointments.find(a => a.date === dateStr && a.time === time);
+                if(busy) { alert('Este horário já está ocupado.'); return; }
+
+                // Limite de 5 carros
+                const distinctCarsToday = new Set(appointments.filter(a => a.date === dateStr).map(a => a.groupId));
+                if(distinctCarsToday.size >= 5) { alert('Limite diário de 5 carros atingido!'); return; }
+
+                // Salva
+                appointments.push({
+                    id: Date.now(),
+                    groupId: Date.now(), // ID único do agendamento
+                    date: dateStr,
+                    time: time,
+                    client: client,
+                    car: car,
+                    desc: desc
+                });
+
+                saveToStorage();
+                closeModal();
+                
+                if(document.getElementById('view-day-detail').style.display !== 'none') renderDayTimeline(dateStr);
+                else renderWeeklyList();
+                renderMiniCalendar();
+
+            } catch (e) { console.error(e); alert("Erro ao salvar."); }
         }
-        const d1 = days[0];
-        const d2 = days[6];
-        document.getElementById(
-          "week-range-label"
-        ).innerText = `${d1.getDate()} ${
-          MONTHS[d1.getMonth()]
-        } - ${d2.getDate()} ${MONTHS[d2.getMonth()]}`;
-        const todayKey = formatDateKey(new Date());
 
-        days.forEach((date) => {
-          const dateKey = formatDateKey(date);
-          const dayIndex = date.getDay();
-          const prettyDate = `${
-            WEEK_DAYS[dayIndex]
-          }, ${date.getDate()} DE ${MONTHS[date.getMonth()].toUpperCase()}`;
-          const holidayName = getHolidayName(date);
+        function deleteApp(groupId) {
+            if(confirm('Excluir?')) {
+                appointments = appointments.filter(a => a.groupId !== groupId);
+                saveToStorage();
+                showWeeklyList();
+                renderMiniCalendar();
+            }
+        }
 
-          const headerRow = document.createElement("div");
-          headerRow.className = "day-label-row";
-          headerRow.onclick = () =>
-            openDayDetail(dateKey, prettyDate, dayIndex, holidayName);
-          const labelText = document.createElement("span");
-          labelText.className = `day-label-text ${
-            dateKey === todayKey ? "today" : ""
-          }`;
-          labelText.innerText = prettyDate;
-          if (holidayName) {
-            const badge = document.createElement("span");
-            badge.className = "holiday-badge";
-            badge.innerText = holidayName;
-            labelText.appendChild(document.createTextNode(" "));
-            labelText.appendChild(badge);
-          }
-          const iconArrow = document.createElement("span");
-          iconArrow.className = "day-label-icon";
-          iconArrow.innerText = "›";
-          headerRow.appendChild(labelText);
-          headerRow.appendChild(iconArrow);
+        /* --- RENDER --- */
+        function renderWeeklyList() {
+            const container = document.getElementById('weekly-content'); container.innerHTML = '';
+            const days = []; for(let i=0; i<7; i++) { const d = new Date(currentWeekStart); d.setDate(d.getDate() + i); days.push(d); }
+            const d1 = days[0]; const d2 = days[6]; document.getElementById('week-range-label').innerText = `${d1.getDate()} ${MONTHS[d1.getMonth()]} - ${d2.getDate()} ${MONTHS[d2.getMonth()]}`;
+            const todayKey = formatDateKey(new Date());
 
-          const contentArea = document.createElement("div");
-          contentArea.className = "day-content-area";
-          const dayApps = appointments
-            .filter((a) => a.date === dateKey)
-            .sort((a, b) => a.time.localeCompare(b.time));
+            days.forEach(date => {
+                const dateKey = formatDateKey(date);
+                const dayIndex = date.getDay();
+                const prettyDate = `${WEEK_DAYS[dayIndex]}, ${date.getDate()} DE ${MONTHS[date.getMonth()].toUpperCase()}`;
+                const holidayName = getHolidayName(date);
 
-          if (holidayName) {
-            contentArea.innerHTML = `<div class="holiday-day-msg">Feriado: ${holidayName} (Fechado)</div>`;
-          } else if (dayIndex === 0 || dayIndex === 6) {
-            contentArea.innerHTML = `<div class="closed-day-msg">Oficina Fechada</div>`;
-          } else if (dayApps.length === 0) {
-            contentArea.innerHTML = `<div class="empty-day-msg">Nenhum agendamento</div>`;
-          } else {
-            dayApps.forEach((app) => {
-              const card = document.createElement("div");
-              card.className = "agenda-card";
-              const obsHtml = app.desc
-                ? `<div class="obs-info">${app.desc}</div>`
-                : "";
-              card.innerHTML = `
+                const headerRow = document.createElement('div'); headerRow.className = 'day-label-row'; headerRow.onclick = () => openDayDetail(dateKey, prettyDate, dayIndex, holidayName);
+                const labelText = document.createElement('span'); labelText.className = `day-label-text ${dateKey === todayKey ? 'today' : ''}`; labelText.innerText = prettyDate;
+                
+                if(holidayName) { 
+                    const badge = document.createElement('span'); badge.className = 'holiday-badge'; badge.innerText = holidayName; labelText.appendChild(document.createTextNode(" ")); labelText.appendChild(badge); 
+                } else if (dayIndex !== 0 && dayIndex !== 6) {
+                    const uniqueCars = new Set(appointments.filter(a => a.date === dateKey).map(a => a.groupId)).size;
+                    const capBadge = document.createElement('span');
+                    capBadge.className = `capacity-badge ${uniqueCars >= 5 ? 'full' : 'available'}`;
+                    capBadge.innerText = `${uniqueCars}/5`;
+                    labelText.appendChild(capBadge);
+                }
+                const iconArrow = document.createElement('span'); iconArrow.className = 'day-label-icon'; iconArrow.innerText = '›';
+                headerRow.appendChild(labelText); headerRow.appendChild(iconArrow);
+
+                const contentArea = document.createElement('div'); contentArea.className = 'day-content-area';
+                const dayApps = appointments.filter(a => a.date === dateKey).sort((a,b) => a.time.localeCompare(b.time));
+
+                if (holidayName) { contentArea.innerHTML = `<div class="holiday-day-msg">Feriado: ${holidayName} (Fechado)</div>`; }
+                else if (dayIndex === 0 || dayIndex === 6) { contentArea.innerHTML = `<div class="closed-day-msg">Oficina Fechada</div>`; }
+                else if (dayApps.length === 0) { contentArea.innerHTML = `<div class="empty-day-msg">Nenhum agendamento</div>`; }
+                else {
+                    dayApps.forEach(app => {
+                        const card = document.createElement('div'); 
+                        const isChecklist = (app.time === '07:00' || app.time === '08:00');
+                        
+                        card.className = `agenda-card ${isChecklist ? 'checklist' : ''}`;
+                        
+                        const obsHtml = app.desc ? `<div class="obs-info">${app.desc}</div>` : '';
+                        const checkLabel = isChecklist ? `<span class="badge-checklist">CHECKLIST</span>` : '';
+
+                        card.innerHTML = `
                             <div class="card-strip"></div>
                             <div class="card-time-box">${app.time}</div>
                             <div class="card-info-box">
-                                <div class="client-name">${app.client}</div>
+                                <div class="client-name">
+                                    ${app.client} ${checkLabel}
+                                </div>
                                 <div class="car-info">${app.car}</div>
                                 ${obsHtml}
                             </div>
                             <div class="card-actions">
-                                <div class="btn-delete-icon" onclick="deleteApp(${app.id}, '${dateKey}')">✖</div>
+                                <div class="btn-delete-icon" onclick="deleteApp(${app.groupId})">✖</div>
                             </div>
                         `;
-              contentArea.appendChild(card);
+                        contentArea.appendChild(card);
+                    });
+                }
+                const group = document.createElement('div'); group.className = 'day-group'; group.appendChild(headerRow); group.appendChild(contentArea); container.appendChild(group);
             });
-          }
-          const group = document.createElement("div");
-          group.className = "day-group";
-          group.appendChild(headerRow);
-          group.appendChild(contentArea);
-          container.appendChild(group);
-        });
-      }
+        }
 
-      /* --- TIMELINE --- */
-      function renderDayTimeline(dateKey) {
-        const container = document.getElementById("day-detail-content");
-        container.innerHTML = "";
-        const dayApps = appointments.filter((a) => a.date === dateKey);
-        const slots = [
-          "08:00",
-          "09:00",
-          "10:00",
-          "11:00",
-          "13:00",
-          "14:00",
-          "15:00",
-          "16:00",
-          "17:00",
-          "18:00",
-        ];
+        /* --- TIMELINE --- */
+        function renderDayTimeline(dateKey) {
+            const container = document.getElementById('day-detail-content'); container.innerHTML = '';
+            const dayApps = appointments.filter(a => a.date === dateKey);
+            
+            const ALL_SLOTS = ['07:00', '08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
-        slots.forEach((time) => {
-          const app = dayApps.find((a) => a.time === time);
-          const row = document.createElement("div");
-          row.className = "timeline-slot";
-          row.innerHTML = `<div class="ts-time">${time}</div>`;
-          const contentDiv = document.createElement("div");
-          contentDiv.className = "ts-content";
+            ALL_SLOTS.forEach(time => {
+                const app = dayApps.find(a => a.time === time);
+                const row = document.createElement('div'); row.className = 'timeline-slot';
+                row.innerHTML = `<div class="ts-time">${time}</div>`;
+                const contentDiv = document.createElement('div'); contentDiv.className = 'ts-content';
 
-          if (app) {
-            const obsHtml = app.desc
-              ? `<div class="obs-info">${app.desc}</div>`
-              : "";
-            contentDiv.innerHTML = `
-                        <div class="agenda-card" style="margin:0">
+                if(app) {
+                    const isChecklist = (app.time === '07:00' || app.time === '08:00');
+                    const obsHtml = app.desc ? `<div class="obs-info">${app.desc}</div>` : '';
+                    const checkLabel = isChecklist ? `<span class="badge-checklist">CHECKLIST</span>` : '';
+
+                    contentDiv.innerHTML = `
+                        <div class="agenda-card ${isChecklist ? 'checklist' : ''}" style="margin:0">
                             <div class="card-strip"></div>
                             <div class="card-info-box" style="padding-left:15px">
-                                <div class="client-name">${app.client}</div>
+                                <div class="client-name">${app.client} ${checkLabel}</div>
                                 <div class="car-info">${app.car}</div>
                                 ${obsHtml}
                             </div>
                             <div class="card-actions">
-                                <div class="btn-delete-icon" onclick="deleteApp(${app.id}, '${dateKey}')">✖</div>
+                                <div class="btn-delete-icon" onclick="deleteApp(${app.groupId})">✖</div>
                             </div>
                         </div>
                     `;
-          } else {
-            contentDiv.innerHTML = `<div class="slot-free" onclick="openModal('${dateKey}', '${time}')">+ Disponível</div>`;
-          }
-          row.appendChild(contentDiv);
-          container.appendChild(row);
-        });
-      }
-
-      /* --- MINI CALENDAR --- */
-      function renderMiniCalendar() {
-        const container = document.getElementById("mini-calendar-days");
-        container.innerHTML = "";
-        const year = miniCalendarMonth.getFullYear();
-        const month = miniCalendarMonth.getMonth();
-        document.getElementById(
-          "mini-month-label"
-        ).innerText = `${FULL_MONTHS[month]} ${year}`;
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDayIndex = firstDay.getDay();
-        for (let i = 0; i < startDayIndex; i++)
-          container.appendChild(document.createElement("div"));
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-          const dateObj = new Date(year, month, day);
-          const dateKey = formatDateKey(dateObj);
-          const cell = document.createElement("div");
-          cell.className = "mini-cell";
-          cell.innerText = day;
-          const weekEnd = new Date(currentWeekStart);
-          weekEnd.setDate(weekEnd.getDate() + 6);
-          if (dateObj >= currentWeekStart && dateObj <= weekEnd) {
-            cell.classList.add("selected-week");
-          }
-          if (getHolidayName(dateObj)) {
-            cell.classList.add("holiday-mark");
-          }
-          if (appointments.some((a) => a.date === dateKey))
-            cell.classList.add("has-event");
-          cell.onclick = () => {
-            const newStart = new Date(dateObj);
-            newStart.setDate(dateObj.getDate() - dateObj.getDay());
-            currentWeekStart = newStart;
-            renderWeeklyList();
-            renderMiniCalendar();
-            showWeeklyList();
-          };
-          container.appendChild(cell);
-        }
-      }
-      function changeMiniMonth(delta) {
-        miniCalendarMonth.setMonth(miniCalendarMonth.getMonth() + delta);
-        renderMiniCalendar();
-      }
-
-      /* --- LOGIC --- */
-      function openModal(preDate, preTime) {
-        if (!preDate) preDate = formatDateKey(new Date());
-        const d = new Date(preDate + "T00:00:00");
-        const hName = getHolidayName(d);
-        if (hName) {
-          alert(`Impossível agendar: ${hName}`);
-          return;
-        }
-        document.getElementById("modal-overlay").style.display = "flex";
-        document.getElementById("input-date").value = preDate;
-        if (preTime) document.getElementById("input-time").value = preTime;
-        document.getElementById("input-client").value = "";
-        document.getElementById("input-car").value = "";
-        document.getElementById("input-desc").value = "";
-      }
-      function closeModal() {
-        document.getElementById("modal-overlay").style.display = "none";
-      }
-
-      function saveAppointment() {
-        const dateStr = document.getElementById("input-date").value;
-        const time = document.getElementById("input-time").value;
-        const client = document.getElementById("input-client").value;
-        const car = document.getElementById("input-car").value;
-        const desc = document.getElementById("input-desc").value;
-        if (!dateStr || !client || !car) {
-          alert("Preencha os campos obrigatórios");
-          return;
+                } else {
+                    const isChecklistSlot = (time === '07:00' || time === '08:00');
+                    const text = isChecklistSlot ? '+ Agendar Checklist' : '+ Disponível';
+                    const extraClass = isChecklistSlot ? 'checklist-slot' : '';
+                    contentDiv.innerHTML = `<div class="slot-free ${extraClass}" onclick="openModal('${dateKey}', '${time}')">${text}</div>`;
+                }
+                row.appendChild(contentDiv); container.appendChild(row);
+            });
         }
 
-        const d = new Date(dateStr + "T00:00:00");
-        // Valida Passado
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        if (d < now) {
-          alert("Não é possível agendar em datas passadas.");
-          return;
+        function renderMiniCalendar() {
+            const container = document.getElementById('mini-calendar-days'); container.innerHTML = '';
+            const year = miniCalendarMonth.getFullYear(); const month = miniCalendarMonth.getMonth();
+            document.getElementById('mini-month-label').innerText = `${FULL_MONTHS[month]} ${year}`;
+            const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0); const startDayIndex = firstDay.getDay();
+            for(let i=0; i<startDayIndex; i++) container.appendChild(document.createElement('div'));
+            for(let day=1; day<=lastDay.getDate(); day++) {
+                const dateObj = new Date(year, month, day); const dateKey = formatDateKey(dateObj);
+                const cell = document.createElement('div'); cell.className = 'mini-cell'; cell.innerText = day;
+                const weekEnd = new Date(currentWeekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+                if (dateObj >= currentWeekStart && dateObj <= weekEnd) { cell.classList.add('selected-week'); }
+                if(getHolidayName(dateObj)) { cell.classList.add('holiday-mark'); }
+                if(appointments.some(a => a.date === dateKey)) cell.classList.add('has-event');
+                cell.onclick = () => { const newStart = new Date(dateObj); newStart.setDate(dateObj.getDate() - dateObj.getDay()); currentWeekStart = newStart; renderWeeklyList(); renderMiniCalendar(); showWeeklyList(); };
+                container.appendChild(cell);
+            }
         }
+        function changeMiniMonth(delta) { miniCalendarMonth.setMonth(miniCalendarMonth.getMonth() + delta); renderMiniCalendar(); }
 
-        const hName = getHolidayName(d);
-        if (hName) {
-          alert(`Impossível agendar: ${hName}`);
-          return;
-        }
-        const dayIdx = d.getDay();
-        if (dayIdx === 0 || dayIdx === 6) {
-          alert("Oficina fechada no fim de semana.");
-          return;
-        }
-        const count = appointments.filter((a) => a.date === dateStr).length;
-        if (count >= 5) {
-          alert("Dia lotado (Máx 5).");
-          return;
-        }
-        const busy = appointments.find(
-          (a) => a.date === dateStr && a.time === time
-        );
-        if (busy) {
-          alert("Horário já ocupado.");
-          return;
-        }
-        appointments.push({
-          id: Date.now(),
-          date: dateStr,
-          time: time,
-          client: client,
-          car: car,
-          desc: desc,
-        });
-        saveToStorage();
-        closeModal();
-        if (document.getElementById("view-day-detail").style.display !== "none")
-          renderDayTimeline(dateStr);
-        else renderWeeklyList();
-        renderMiniCalendar();
-      }
-      function deleteApp(id, dateKey) {
-        if (confirm("Excluir?")) {
-          appointments = appointments.filter((a) => a.id !== id);
-          saveToStorage();
-          renderDayTimeline(dateKey);
-          renderWeeklyList();
-          renderMiniCalendar();
-        }
-      }
+        function openModal(preDate, preTime) {
+            if(!preDate) preDate = formatDateKey(new Date());
+            const d = new Date(preDate + 'T00:00:00'); 
+            const hName = getHolidayName(d); if(hName) { alert(`Impossível agendar: ${hName}`); return; }
+            const dayIdx = d.getDay(); if(dayIdx === 0 || dayIdx === 6) { alert('Oficina fechada no fim de semana.'); return; }
 
-      init();
+            document.getElementById('modal-overlay').style.display = 'flex';
+            document.getElementById('input-date').value = preDate; 
+            if(preTime) document.getElementById('input-time').value = preTime;
+            document.getElementById('input-client').value = ''; 
+            document.getElementById('input-car').value = ''; 
+            document.getElementById('input-desc').value = '';
+        }
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        
+        function clearData() { if(confirm('Apagar tudo?')) { localStorage.removeItem('autocar_agenda_v15'); location.reload(); } }
+
+        init();
     </script>
-  </body>
+</body>
 </html>

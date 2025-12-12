@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Autocar BS </title>
+    <title>Agenda Autocar BS</title>
     <style>
         /* --- CONFIGURAÇÕES GERAIS --- */
         :root {
@@ -33,7 +33,7 @@
             overflow: hidden;
         }
 
-        /* --- TELA DE LOGIN (NOVO) --- */
+        /* --- TELA DE LOGIN --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--bg-body); z-index: 9999;
@@ -47,15 +47,8 @@
         }
         .login-logo { font-size: 30px; font-weight: 800; font-style: italic; margin-bottom: 30px; display: block; }
         .login-logo span.white { color: #fff; } .login-logo span.red { color: var(--brand-red); }
-        
-        .login-input {
-            width: 100%; padding: 15px; margin-bottom: 15px; background: #2c2c2c;
-            border: 1px solid #444; color: white; border-radius: 5px; outline: none;
-        }
-        .btn-login {
-            width: 100%; padding: 15px; background: var(--brand-red); color: white;
-            border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px;
-        }
+        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; background: #2c2c2c; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
+        .btn-login { width: 100%; padding: 15px; background: var(--brand-red); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; }
         .btn-login:hover { background-color: #ff4444; }
         .login-error { color: #ff4444; margin-top: 10px; font-size: 14px; display: none; }
 
@@ -63,7 +56,7 @@
         header { background-color: var(--brand-dark); height: 60px; width: 100%; display: flex; align-items: center; padding: 0 25px; color: white; border-bottom: 1px solid #333; flex-shrink: 0; justify-content: space-between; }
         .logo { font-size: 20px; font-weight: 800; font-style: italic; letter-spacing: -0.5px; cursor: pointer; }
         .logo span.white { color: #fff; } .logo span.red { color: var(--brand-red); }
-        .avatar { width: 36px; height: 36px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; cursor: pointer; transition: 0.2s; }
+        .avatar { width: 36px; height: 36px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; cursor: pointer; }
         .avatar:hover { opacity: 0.8; }
 
         .layout-container { display: flex; flex: 1; overflow: hidden; }
@@ -249,16 +242,16 @@
         import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // --- COLE AQUI SUAS CHAVES DO FIREBASE ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyBPSZquA9uEKirobLOBNLrUteLdoH86UUk",
-    authDomain: "autocarbs-agenda.firebaseapp.com",
-    databaseURL: "https://autocarbs-agenda-default-rtdb.firebaseio.com",
-    projectId: "autocarbs-agenda",
-    storageBucket: "autocarbs-agenda.firebasestorage.app",
-    messagingSenderId: "447429592718",
-    appId: "1:447429592718:web:401840e32ef6371c81ebdf"
-  };
+        // --- CHAVES CONECTADAS ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPSZquA9uEKirobLOBNLrUteLdoH86UUk",
+            authDomain: "autocarbs-agenda.firebaseapp.com",
+            databaseURL: "https://autocarbs-agenda-default-rtdb.firebaseio.com",
+            projectId: "autocarbs-agenda",
+            storageBucket: "autocarbs-agenda.firebasestorage.app",
+            messagingSenderId: "447429592718",
+            appId: "1:447429592718:web:401840e32ef6371c81ebdf"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -278,7 +271,6 @@
 
             signInWithEmailAndPassword(auth, email, pass)
                 .then((userCredential) => {
-                    // Login sucesso - o onAuthStateChanged vai lidar com a tela
                     errorDiv.style.display = 'none';
                 })
                 .catch((error) => {
@@ -294,20 +286,17 @@
             });
         }
 
-        // Monitora Estado do Login
+        // Monitora Estado do Login e Inicia App
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Usuário logado: Esconde login, Inicia App
                 document.getElementById('login-screen').style.display = 'none';
-                initFirebaseListener(); // Começa a baixar os dados
+                initFirebaseListener(); // Só carrega dados se logado
             } else {
-                // Usuário deslogado: Mostra login
                 document.getElementById('login-screen').style.display = 'flex';
             }
         });
 
-        // --- LÓGICA DA AGENDA (Mantida igual) ---
-        
+        // --- LÓGICA DA AGENDA ---
         const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
         const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         const FULL_MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -327,11 +316,9 @@
             });
         }
 
-        // HELPERS GLOBAIS
         window.formatDateKey = (dateObj) => dateObj.toISOString().slice(0, 10);
         window.getHolidayName = (dateObj) => { const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); const dd = String(dateObj.getDate()).padStart(2, '0'); const key = `${mm}-${dd}`; return FIXED_HOLIDAYS[key] || null; }
 
-        // NAVEGAÇÃO
         window.showWeeklyList = () => { document.getElementById('view-weekly-list').style.display = 'flex'; document.getElementById('view-day-detail').style.display = 'none'; renderWeeklyList(); renderMiniCalendar(); }
         window.openDayDetail = (dateKey, prettyDate, dayIndex, holidayName) => {
             if(dayIndex === 0 || dayIndex === 6) { alert('Oficina Fechada no fim de semana.'); return; }
@@ -343,7 +330,6 @@
         window.changeWeek = (delta) => { currentWeekStart.setDate(currentWeekStart.getDate() + (delta * 7)); renderWeeklyList(); renderMiniCalendar(); }
         window.goToToday = () => { currentWeekStart = new Date(); currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); renderWeeklyList(); renderMiniCalendar(); }
 
-        // SALVAR
         window.saveAppointment = () => {
             try {
                 const dateStr = document.getElementById('input-date').value;
@@ -384,7 +370,6 @@
 
         window.deleteApp = (id) => { if(confirm('Excluir agendamento?')) { if(db) remove(ref(db, 'agendamentos/' + id)); } }
 
-        // RENDERIZAÇÃO
         function renderWeeklyList() {
             const container = document.getElementById('weekly-content'); container.innerHTML = '';
             const days = []; for(let i=0; i<7; i++) { const d = new Date(currentWeekStart); d.setDate(d.getDate() + i); days.push(d); }
@@ -514,7 +499,6 @@
             if(preTime) {
                 document.getElementById('input-time').value = preTime;
             } else {
-                // RESET IMPORTANTE: Garante que o usuário precise escolher
                 document.getElementById('input-time').value = "";
             }
             document.getElementById('input-client').value = ''; 

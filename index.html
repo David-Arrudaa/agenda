@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Autocar BS - Online</title>
+    <title>Agenda Autocar BS </title>
     <style>
         /* --- CONFIGURAÇÕES GERAIS --- */
         :root {
@@ -33,12 +33,39 @@
             overflow: hidden;
         }
 
+        /* --- TELA DE LOGIN (NOVO) --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-body); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+        }
+        .login-box {
+            background-color: var(--bg-card); padding: 40px; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
+            text-align: center; border: 1px solid var(--border-color);
+        }
+        .login-logo { font-size: 30px; font-weight: 800; font-style: italic; margin-bottom: 30px; display: block; }
+        .login-logo span.white { color: #fff; } .login-logo span.red { color: var(--brand-red); }
+        
+        .login-input {
+            width: 100%; padding: 15px; margin-bottom: 15px; background: #2c2c2c;
+            border: 1px solid #444; color: white; border-radius: 5px; outline: none;
+        }
+        .btn-login {
+            width: 100%; padding: 15px; background: var(--brand-red); color: white;
+            border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px;
+        }
+        .btn-login:hover { background-color: #ff4444; }
+        .login-error { color: #ff4444; margin-top: 10px; font-size: 14px; display: none; }
+
         /* --- HEADER --- */
         header { background-color: var(--brand-dark); height: 60px; width: 100%; display: flex; align-items: center; padding: 0 25px; color: white; border-bottom: 1px solid #333; flex-shrink: 0; justify-content: space-between; }
         .logo { font-size: 20px; font-weight: 800; font-style: italic; letter-spacing: -0.5px; cursor: pointer; }
         .logo span.white { color: #fff; } .logo span.red { color: var(--brand-red); }
-        .avatar { width: 36px; height: 36px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; cursor: default; }
-        
+        .avatar { width: 36px; height: 36px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; cursor: pointer; transition: 0.2s; }
+        .avatar:hover { opacity: 0.8; }
+
         .layout-container { display: flex; flex: 1; overflow: hidden; }
         .sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         
@@ -127,11 +154,23 @@
 </head>
 <body>
 
+    <div id="login-screen">
+        <div class="login-box">
+            <div class="login-logo">
+                <span class="white">AUTOCAR</span><span class="red">BS</span>
+            </div>
+            <input type="email" id="login-email" class="login-input" placeholder="E-mail">
+            <input type="password" id="login-pass" class="login-input" placeholder="Senha">
+            <button class="btn-login" onclick="login()">ACESSAR SISTEMA</button>
+            <div id="login-error" class="login-error"></div>
+        </div>
+    </div>
+
     <header>
         <div class="logo">
             <span class="white">AUTOCAR</span><span class="red">BS</span>
         </div>
-        <div class="avatar" title="Autocar BS">A</div>
+        <div class="avatar" onclick="logout()" title="Sair do Sistema">A</div>
     </header>
 
     <div class="layout-container">
@@ -208,7 +247,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // --- COLE AQUI SUAS CHAVES DO FIREBASE ---
   const firebaseConfig = {
     apiKey: "AIzaSyBPSZquA9uEKirobLOBNLrUteLdoH86UUk",
     authDomain: "autocarbs-agenda.firebaseapp.com",
@@ -221,8 +262,52 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
 
-        // CONFIG
+        // --- LÓGICA DE LOGIN ---
+        window.login = function() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const errorDiv = document.getElementById('login-error');
+
+            if (!email || !pass) {
+                errorDiv.innerText = "Preencha e-mail e senha";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    // Login sucesso - o onAuthStateChanged vai lidar com a tela
+                    errorDiv.style.display = 'none';
+                })
+                .catch((error) => {
+                    errorDiv.innerText = "Erro: E-mail ou senha incorretos.";
+                    errorDiv.style.display = 'block';
+                    console.error(error);
+                });
+        }
+
+        window.logout = function() {
+            signOut(auth).then(() => {
+                location.reload();
+            });
+        }
+
+        // Monitora Estado do Login
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuário logado: Esconde login, Inicia App
+                document.getElementById('login-screen').style.display = 'none';
+                initFirebaseListener(); // Começa a baixar os dados
+            } else {
+                // Usuário deslogado: Mostra login
+                document.getElementById('login-screen').style.display = 'flex';
+            }
+        });
+
+        // --- LÓGICA DA AGENDA (Mantida igual) ---
+        
         const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
         const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         const FULL_MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -258,7 +343,7 @@
         window.changeWeek = (delta) => { currentWeekStart.setDate(currentWeekStart.getDate() + (delta * 7)); renderWeeklyList(); renderMiniCalendar(); }
         window.goToToday = () => { currentWeekStart = new Date(); currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); renderWeeklyList(); renderMiniCalendar(); }
 
-        // SALVAR COM VALIDAÇÃO DETALHADA
+        // SALVAR
         window.saveAppointment = () => {
             try {
                 const dateStr = document.getElementById('input-date').value;
@@ -267,7 +352,6 @@
                 const car = document.getElementById('input-car').value;
                 const desc = document.getElementById('input-desc').value;
 
-                // MUDANÇA: Alertas detalhados
                 if(!dateStr) { alert("ERRO: Selecione a DATA do agendamento."); return; }
                 if(!time) { alert("ERRO: Selecione o HORÁRIO na lista."); return; }
                 if(!client) { alert("ERRO: Digite o NOME DO CLIENTE."); return; }
@@ -286,34 +370,19 @@
                 if(distinctCarsToday.size >= 5) { alert('Limite diário de 5 carros atingido!'); return; }
 
                 const id = Date.now();
-                const newApp = {
-                    id: id,
-                    groupId: id,
-                    date: dateStr,
-                    time: time,
-                    client: client,
-                    car: car,
-                    desc: desc
-                };
+                const newApp = { id: id, groupId: id, date: dateStr, time: time, client: client, car: car, desc: desc };
 
-                // TENTA SALVAR NO FIREBASE
                 if (db) {
                     set(ref(db, 'agendamentos/' + id), newApp).then(() => {
                         window.closeModal();
                         if(document.getElementById('view-day-detail').style.display !== 'none') renderDayTimeline(dateStr);
                     }).catch(err => alert("Erro ao conectar com Firebase: " + err.message));
-                } else {
-                    alert("Atenção: Firebase não configurado. As chaves estão faltando no código.");
                 }
 
             } catch (e) { console.error(e); alert("Erro interno no script: " + e.message); }
         }
 
-        window.deleteApp = (id) => {
-            if(confirm('Excluir agendamento?')) {
-                if(db) remove(ref(db, 'agendamentos/' + id));
-            }
-        }
+        window.deleteApp = (id) => { if(confirm('Excluir agendamento?')) { if(db) remove(ref(db, 'agendamentos/' + id)); } }
 
         // RENDERIZAÇÃO
         function renderWeeklyList() {
@@ -454,7 +523,6 @@
         }
         window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; }
 
-        initFirebaseListener();
     </script>
 </body>
 </html>

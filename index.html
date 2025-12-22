@@ -3,158 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Autocar BS</title>
+    <title>Agenda Autocar BS - Car Loading</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-        /* --- CONFIGURAÇÕES GERAIS --- */
+        /* --- DESIGN SYSTEM --- */
         :root {
             --brand-red: #E63946;
-            --brand-dark: #000000;
-            --bg-body: #121212;
-            --bg-card: #1e1e1e;
-            --bg-sidebar: #181818;
-            --bg-header-day: #252525;
-            --bg-item: #2c2c2c;
-            --text-main: #e0e0e0;
-            --text-muted: #999;
-            --border-color: #333;
+            --brand-red-hover: #ff444f;
+            
+            /* TEMA DARK (Padrão) */
+            --bg-body: #0f0f10;
+            --bg-sidebar: #18181b;
+            --bg-header: #18181b;
+            --bg-card: #202022;
+            --bg-input: #121212;
+            --bg-item: #2a2a2d;
+            --bg-hover: #333336;
+            
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --border-color: #2f2f35;
+            
+            --shadow-card: 0 4px 20px rgba(0,0,0,0.4);
+            --shadow-float: 0 10px 30px rgba(0,0,0,0.6);
+
             --holiday-color: #ff9800;
             --checklist-color: #ffb74d;
             --success-green: #4caf50;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', Helvetica, Arial, sans-serif; }
+        /* TEMA LIGHT (REFICADO) */
+        body.light-mode {
+            --bg-body: #e2e8f0; 
+            --bg-sidebar: #ffffff;
+            --bg-header: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --bg-item: #ffffff;
+            --bg-hover: #fff1f2; 
+            --text-main: #0f172a; 
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-float: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        
         body {
             background-color: var(--bg-body);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: var(--text-main);
-            overflow: hidden;
+            height: 100vh; display: flex; flex-direction: column;
+            color: var(--text-main); overflow: hidden; transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- TELA DE LOGIN --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-body); z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column;
+        /* --- CAR LOADING ANIMATION (OFICINA STYLE) --- */
+        #global-loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 6px;
+            background-color: var(--bg-card); /* Cor do asfalto */
+            z-index: 9999; display: none;
+            overflow: visible; /* Deixar o carro vazar para fora da linha */
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .login-box {
-            background-color: var(--bg-card); padding: 40px; border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
-            text-align: center; border: 1px solid var(--border-color);
+
+        /* Faixas da estrada */
+        #global-loading::after {
+            content: ''; position: absolute; top: 2px; left: 0; width: 100%; height: 2px;
+            background: repeating-linear-gradient(90deg, var(--text-muted) 0, var(--text-muted) 10px, transparent 10px, transparent 30px);
+            opacity: 0.3;
         }
-        .login-logo { font-size: 30px; font-weight: 800; font-style: italic; margin-bottom: 30px; display: block; }
-        .login-logo span.white { color: #fff; } .login-logo span.red { color: var(--brand-red); }
-        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; background: #2c2c2c; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
-        .btn-login { width: 100%; padding: 15px; background: var(--brand-red); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .btn-login:hover { background-color: #ff4444; }
-        .login-error { color: #ff4444; margin-top: 10px; font-size: 14px; display: none; }
+
+        .loading-car-wrapper {
+            position: absolute;
+            top: -10px; /* Posiciona o carro em cima da linha */
+            left: -50px; /* Começa fora da tela */
+            width: 50px; height: 30px;
+            color: var(--brand-red);
+            font-size: 28px;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));
+            animation: carDrive 1.8s linear infinite;
+            display: flex; align-items: center;
+            transform: scaleX(-1); /* Inverter o ícone para olhar para a direita */
+        }
+
+        /* Rastro de velocidade (Motion Blur effect) */
+        .loading-car-wrapper::after {
+            content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+            width: 60px; height: 4px;
+            background: linear-gradient(90deg, var(--brand-red), transparent);
+            border-radius: 2px; opacity: 0.6; z-index: -1;
+        }
+
+        @keyframes carDrive {
+            0% { left: -60px; }
+            40% { left: 40%; } /* Acelera no meio */
+            100% { left: 100%; } /* Sai da tela */
+        }
 
         /* --- HEADER --- */
-        header { background-color: var(--brand-dark); height: 60px; width: 100%; display: flex; align-items: center; padding: 0 25px; color: white; border-bottom: 1px solid #333; flex-shrink: 0; justify-content: space-between; }
-        .logo { font-size: 20px; font-weight: 800; font-style: italic; letter-spacing: -0.5px; cursor: pointer; }
-        .logo span.white { color: #fff; } .logo span.red { color: var(--brand-red); }
-        .avatar { width: 36px; height: 36px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid #fff; cursor: pointer; }
-        .avatar:hover { opacity: 0.8; }
-
-        .layout-container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        header { 
+            background-color: var(--bg-header); height: 70px; width: 100%; 
+            display: flex; align-items: center; padding: 0 30px; 
+            border-bottom: 1px solid var(--border-color); flex-shrink: 0; 
+            justify-content: space-between; z-index: 20; box-shadow: var(--shadow-card);
+        }
+        .logo { font-size: 24px; font-weight: 900; font-style: italic; letter-spacing: -1px; }
+        .logo span.white { color: var(--text-main); } .logo span.red { color: var(--brand-red); }
         
-        .btn-create-large { background-color: var(--brand-red); color: #fff; padding: 12px; border-radius: 6px; border: none; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3); transition: 0.2s; width: 100%; }
-        .btn-create-large:hover { background-color: #ff4444; transform: scale(1.02); }
+        .header-actions {
+            display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05);
+            padding: 5px 8px; border-radius: 50px; border: 1px solid var(--border-color);
+        }
+        body.light-mode .header-actions { background: rgba(0,0,0,0.05); }
 
-        .mini-calendar { background-color: var(--bg-card); border-radius: 8px; padding: 15px; border: 1px solid var(--border-color); }
-        .mini-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; font-weight: bold; color: #fff; }
-        .mini-nav { cursor: pointer; color: #888; padding: 5px; } .mini-nav:hover { color: #fff; }
-        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; gap: 4px; }
-        .mini-day-name { font-size: 10px; color: #666; margin-bottom: 5px; }
-        .mini-cell { height: 30px; width: 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 50%; cursor: pointer; color: #ccc; margin: 0 auto; transition: 0.2s; }
-        .mini-cell:hover { background-color: #333; color: #fff; }
-        .mini-cell.selected-week { background-color: var(--brand-red); color: white; font-weight: bold; border-radius: 50%; }
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; 
+            color: var(--text-muted); font-size: 20px; display: flex; align-items: center; 
+            justify-content: center; cursor: pointer; transition: 0.2s;
+        }
+        .icon-btn:hover { background: var(--bg-hover); color: var(--text-main); }
+        .icon-btn.logout:hover { color: var(--brand-red); background: rgba(230, 57, 70, 0.1); }
+
+        /* --- LAYOUT --- */
+        .layout-container { display: flex; flex: 1; overflow: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar { 
+            width: 320px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); 
+            padding: 25px 20px; display: flex; flex-direction: column; gap: 25px; flex-shrink: 0;
+        }
+        
+        .mini-calendar { 
+            background-color: var(--bg-card); border-radius: 12px; padding: 15px;
+            border: 1px solid var(--border-color); box-shadow: var(--shadow-card);
+        }
+        .mini-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 700; font-size: 14px; }
+        .mini-nav { cursor: pointer; color: var(--text-muted); padding: 5px; transition: 0.2s; } 
+        .mini-nav:hover { color: var(--text-main); background: var(--bg-hover); border-radius: 50%; }
+        
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; gap: 2px; }
+        .mini-day-name { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; }
+        .mini-cell { 
+            height: 30px; width: 30px; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; border-radius: 8px; cursor: pointer; color: var(--text-muted); 
+            margin: 0 auto; transition: 0.2s; font-weight: 500;
+        }
+        .mini-cell:hover { background-color: var(--bg-hover); color: var(--text-main); }
+        .mini-cell.selected-week { background-color: var(--brand-red); color: white; font-weight: bold; }
         .mini-cell.holiday-mark { color: var(--holiday-color); font-weight: bold; }
-        .mini-cell.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background-color: white; border-radius: 50%; }
-        .mini-cell.other-month { color: #444; }
+        .mini-cell.has-event::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background-color: var(--text-main); border-radius: 50%; opacity: 0.5; }
+        
+        .btn-create-large { 
+            background: linear-gradient(135deg, var(--brand-red) 0%, #b91c1c 100%); color: white; padding: 14px; border-radius: 10px; border: none; 
+            font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            cursor: pointer; width: 100%; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
+        }
+        .btn-create-large:hover { transform: translateY(-2px); }
 
+        /* --- MAIN CONTENT --- */
         .main-content { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; }
-        .top-bar { padding: 15px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sidebar); }
-        .week-range-label { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 0.5px; }
-        .btn-nav-week { background: #2c2c2c; border: 1px solid #444; color: #fff; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .btn-nav-week:hover { background: #444; border-color: #666; }
-        .btn-back { color: var(--brand-red); cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .scroll-area { flex: 1; overflow-y: auto; padding: 25px; }
+        .top-bar { 
+            padding: 15px 30px; border-bottom: 1px solid var(--border-color); 
+            display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-body); 
+        }
+        .week-range-label { font-size: 18px; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; }
+        .week-nav-btns { display: flex; gap: 8px; background: var(--bg-card); padding: 4px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .btn-nav-week { background: transparent; border: none; color: var(--text-muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-nav-week:hover { background: var(--bg-hover); color: var(--text-main); }
+        
+        .btn-back-style { 
+            display: flex; align-items: center; gap: 8px;
+            background-color: var(--bg-card); border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 8px 16px; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-back-style:hover { border-color: var(--brand-red); color: var(--brand-red); }
+        .btn-back-style i { font-size: 16px; }
 
-        /* Blocos do Dia */
-        .day-group { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 25px; overflow: hidden; }
-        .day-label-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 12px 20px; background-color: var(--bg-header-day); border-bottom: 1px solid #333; transition: 0.2s; }
-        .day-label-row:hover { background-color: #333; }
-        .day-label-text { font-size: 14px; font-weight: bold; color: #ccc; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .day-label-text.today { color: var(--brand-red); }
-        .day-label-text.today::after { content: 'HOJE'; font-size: 10px; background: var(--brand-red); color: white; padding: 2px 6px; border-radius: 4px; }
-        .holiday-badge { background-color: var(--holiday-color); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; vertical-align: middle; }
-        .capacity-badge { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 12px; margin-left: 10px; border: 1px solid #444; color: #aaa; background-color: #333; }
-        .capacity-badge.available { color: var(--success-green); border-color: var(--success-green); background-color: rgba(76, 175, 80, 0.1); }
-        .capacity-badge.full { color: var(--brand-red); border-color: var(--brand-red); background-color: rgba(230, 57, 70, 0.1); }
-        .day-label-icon { font-size: 18px; color: #666; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 30px; padding-bottom: 120px; }
+
+        /* --- CARDS E LISTA --- */
+        .day-group { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: var(--shadow-card); }
+        
+        .day-label-row { 
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer; 
+            padding: 12px 20px; background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); 
+            transition: 0.2s; 
+        }
+        .day-label-row:hover { background-color: var(--bg-hover); }
+        
+        .day-info-left { display: flex; align-items: center; gap: 12px; }
+        .day-label-text { font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .day-label-text.today { color: var(--brand-red); } 
+        
+        .capacity-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border-color); color: var(--text-muted); background: transparent; }
+        .capacity-badge.available { border-color: #2e7d32; color: #4caf50; background: rgba(76, 175, 80, 0.1); }
+        .capacity-badge.full { border-color: #c62828; color: #ef5350; background: rgba(244, 67, 54, 0.1); }
+
+        .badge-today { font-size: 10px; background: var(--brand-red); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+
         .day-content-area { padding: 15px; }
 
-        /* Card de Agendamento */
-        .agenda-card { background-color: #2c2c2c; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: stretch; border: 1px solid #3a3a3a; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.2s; overflow: hidden; min-height: 70px; }
-        .agenda-card:hover { transform: translateX(3px); border-color: #555; }
-        .card-strip { width: 6px; background-color: var(--brand-red); flex-shrink: 0; }
+        /* CARD AGENDAMENTO */
+        .agenda-card { 
+            background-color: var(--bg-item); border-radius: 8px; margin-bottom: 10px; 
+            display: flex; align-items: stretch; border: 1px solid var(--border-color); 
+            min-height: 70px; transition: all 0.2s; position: relative; overflow: hidden; 
+        }
+        .agenda-card:hover { transform: translateX(3px); border-color: var(--text-muted); }
+        .card-strip { width: 5px; background-color: var(--brand-red); flex-shrink: 0; }
         .agenda-card.checklist .card-strip { background-color: var(--checklist-color); }
-        .card-time-box { width: 70px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #444; font-size: 16px; font-weight: bold; color: #fff; background-color: rgba(255,255,255,0.02); flex-shrink: 0; }
-        .card-info-box { flex: 1; padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-        .client-name { font-size: 15px; font-weight: 700; color: #ffffff; text-transform: capitalize; display: flex; align-items: center; gap: 8px;}
-        .car-info { font-size: 13px; color: #cccccc; font-weight: 500; text-transform: uppercase; }
-        .obs-info { font-size: 12px; color: #888; font-style: italic; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
-        .obs-info::before { content: '💬'; font-style: normal; font-size: 10px; opacity: 0.7; }
-        .card-actions { display: flex; align-items: center; padding-right: 15px; }
-        .btn-delete-icon { color: #555; cursor: pointer; padding: 8px; font-size: 18px; transition: 0.2s; border-radius: 4px; }
-        .btn-delete-icon:hover { color: #ff4444; background-color: rgba(255,0,0,0.1); }
-        .badge-checklist { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; background-color: rgba(255, 183, 77, 0.15); color: var(--checklist-color); border: 1px solid var(--checklist-color); padding: 2px 5px; border-radius: 3px; }
-
-        .empty-day-msg { padding: 5px; color: #666; font-style: italic; font-size: 13px; }
-        .closed-day-msg { padding: 5px; color: #d32f2f; font-weight: bold; font-size: 13px; opacity: 0.7; }
-        .holiday-day-msg { padding: 5px; color: var(--holiday-color); font-weight: bold; font-size: 13px; opacity: 0.9; }
-
-        .timeline-slot { display: flex; padding: 15px 0; border-bottom: 1px solid #333; }
-        .ts-time { width: 70px; color: #ccc; font-weight: bold; font-size: 15px; padding-top: 12px; text-align: center;}
-        .ts-content { flex: 1; }
-        .slot-free { border: 1px dashed #444; background-color: rgba(255,255,255,0.03); color: #777; padding: 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
-        .slot-free:hover { background-color: #333; border-color: var(--brand-red); color: var(--brand-red); }
-        .slot-free.checklist-slot { border-color: #554433; color: var(--checklist-color); opacity: 0.7; }
-        .slot-free.checklist-slot:hover { border-color: var(--checklist-color); color: var(--checklist-color); opacity: 1; }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 200; display: none; justify-content: center; align-items: center; }
-        .modal-content { background-color: #252525; width: 90%; max-width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); animation: fadeIn 0.2s; color: #fff; border: 1px solid #444; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .form-group { margin-bottom: 20px; }
-        .form-label { font-size: 13px; color: #ccc; font-weight: bold; margin-bottom: 8px; display: block; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; background-color: #1e1e1e; border: 1px solid #444; border-radius: 6px; font-size: 15px; outline: none; color: white; }
-        .form-textarea { height: 70px; resize: none; font-family: inherit; }
         
-        .btn-save { width: 100%; padding: 14px; background-color: var(--brand-red); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-save:hover { background-color: #ff4444; }
-        .btn-cancel { width: 100%; padding: 10px; background: none; border: none; color: #888; margin-top: 10px; cursor: pointer; }
+        .card-time-box { 
+            width: 70px; display: flex; align-items: center; justify-content: center; 
+            border-right: 1px solid var(--border-color); font-size: 16px; font-weight: 800; 
+            color: var(--text-main); background-color: rgba(255,255,255,0.02); flex-shrink: 0; 
+        }
+        body.light-mode .card-time-box { background-color: #e2e8f0; }
+        
+        .card-info-box { flex: 1; padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; gap: 3px; min-width: 0; }
+        .client-name { font-size: 15px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .car-info { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .obs-info { font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.7; }
+        
+        .card-actions { display: flex; align-items: center; padding-right: 10px; gap: 5px; }
+        .icon-btn-small { color: var(--text-muted); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: 0.2s; font-size: 16px; cursor: pointer; }
+        .icon-btn-small.edit:hover { color: var(--text-main); background-color: var(--bg-hover); }
+        .icon-btn-small.delete:hover { color: var(--brand-red); background-color: rgba(230, 57, 70, 0.1); }
 
-        @media (max-width: 768px) { .sidebar { display: none; } }
-        .fab-mobile { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background-color: var(--brand-red); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; color: white; font-size: 30px; border: none; z-index: 90; }
+        .badge-checklist-card { font-size: 9px; font-weight: 800; text-transform: uppercase; background-color: rgba(255, 183, 77, 0.15); color: var(--checklist-color); border: 1px solid var(--checklist-color); padding: 2px 4px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        
+        /* TIMELINE */
+        .timeline-slot { display: flex; padding: 15px 0; border-bottom: 1px solid var(--border-color); align-items: center; }
+        .ts-time { width: 70px; color: var(--text-main); font-weight: 700; font-size: 15px; text-align: center; flex-shrink: 0; }
+        .ts-content { flex: 1; min-width: 0; padding-right: 15px; }
+        
+        .slot-free { 
+            border: 1px dashed var(--border-color); 
+            background-color: rgba(255,255,255,0.02); 
+            padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 500; 
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; 
+            text-align: left;
+        }
+        body.light-mode .slot-free { background-color: #ffffff; border-color: #cbd5e1; }
+        .slot-free:hover { background-color: var(--bg-hover); border-color: var(--text-muted); }
+
+        .slot-free.checklist-style { color: var(--checklist-color) !important; border-color: rgba(255, 183, 77, 0.4); }
+        .slot-free.checklist-style:hover { border-color: var(--checklist-color); }
+        .slot-free.default-style { color: var(--text-muted); }
+        .slot-free.default-style:hover { color: var(--text-main); }
+
+        /* --- MODAIS --- */
+        .modal-overlay, #login-screen, #error-modal, #confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content, .login-box, .dialog-box { background-color: var(--bg-card); width: 90%; max-width: 420px; padding: 35px; border-radius: 16px; box-shadow: var(--shadow-float); border: 1px solid var(--border-color); animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .dialog-box { text-align: center; padding: 30px; max-width: 360px; }
+        .dialog-icon { font-size: 40px; margin-bottom: 15px; }
+        .dialog-icon.error { color: var(--brand-red); }
+        .dialog-icon.confirm { color: var(--checklist-color); }
+        .dialog-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; color: var(--text-main); }
+        .dialog-text { color: var(--text-muted); margin-bottom: 25px; font-size: 14px; line-height: 1.4; }
+        .dialog-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-dialog { flex: 1; padding: 10px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; }
+        .btn-dialog.primary { background: var(--brand-red); color: white; }
+        .btn-dialog.secondary { background: var(--bg-hover); color: var(--text-main); }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input, .form-select, .form-textarea, .login-input { 
+            width: 100%; padding: 12px; background-color: var(--bg-input); 
+            border: 1px solid var(--border-color); border-radius: 8px; 
+            font-size: 14px; outline: none; color: var(--text-main); transition: 0.2s; 
+        }
+        .form-input:focus, .login-input:focus { border-color: var(--brand-red); box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.1); }
+        .form-textarea { height: 80px; resize: none; font-family: inherit; }
+        
+        .btn-save, .btn-login { width: 100%; padding: 14px; background-color: var(--brand-red); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-save:hover { background-color: var(--brand-red-hover); }
+        .btn-cancel { width: 100%; padding: 10px; background: transparent; color: var(--text-muted); font-weight: 600; margin-top: 10px; cursor: pointer; border-radius: 8px; text-align: center; border: 1px solid transparent;}
+        .btn-cancel:hover { background: var(--bg-hover); color: var(--text-main); border-color: var(--border-color); }
+
+        .login-logo { font-size: 30px; font-weight: 800; font-style: italic; margin-bottom: 30px; display: block; text-align: center; }
+        .login-logo span.white { color: var(--text-main); } .login-logo span.red { color: var(--brand-red); }
+        .login-error { color: var(--brand-red); margin-top: 15px; font-weight: 600; text-align: center; display: none; }
+
+        @media (max-width: 768px) { .sidebar { display: none; } .top-bar { padding: 15px 20px; } .week-range-label { font-size: 16px; } }
+        .fab-mobile { position: fixed; bottom: 30px; right: 25px; width: 56px; height: 56px; background: linear-gradient(135deg, var(--brand-red), #b91c1c); border-radius: 50%; box-shadow: 0 8px 25px rgba(230, 57, 70, 0.5); display: none; align-items: center; justify-content: center; color: white; font-size: 30px; border: none; z-index: 90; transition: transform 0.2s; }
+        .fab-mobile:active { transform: scale(0.9); }
         @media (max-width: 768px) { .fab-mobile { display: flex; } }
 
+        .holiday-badge { background: rgba(255, 152, 0, 0.1); color: var(--holiday-color); font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 700; border: 1px solid rgba(255, 152, 0, 0.2); }
+        .empty-day-msg { padding: 15px; color: var(--text-muted); font-style: italic; font-size: 14px; text-align: center; border: 2px dashed var(--border-color); border-radius: 8px; }
+        .closed-day-msg { padding: 15px; color: var(--brand-red); background: rgba(230, 57, 70, 0.05); text-align: center; border-radius: 8px; font-weight: 700; border: 1px solid rgba(230, 57, 70, 0.1); }
+        .holiday-day-msg { padding: 15px; color: var(--holiday-color); background: rgba(255, 152, 0, 0.05); text-align: center; border-radius: 8px; font-weight: 700; border: 1px solid rgba(255, 152, 0, 0.1); }
     </style>
 </head>
 <body>
+
+    <div id="global-loading">
+        <div class="loading-car-wrapper">
+            <i class="ph-fill ph-car-profile"></i>
+        </div>
+    </div>
+
+    <div id="error-modal">
+        <div class="dialog-box">
+            <div class="dialog-icon error"><i class="ph-fill ph-warning-circle"></i></div>
+            <div class="dialog-title" id="error-title">Atenção</div>
+            <div class="dialog-text" id="error-text">Mensagem de erro.</div>
+            <div class="dialog-actions">
+                <button class="btn-dialog primary" onclick="closeError()">Entendi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal">
+        <div class="dialog-box">
+            <div class="dialog-icon confirm"><i class="ph-fill ph-question"></i></div>
+            <div class="dialog-title" id="confirm-title">Confirmar</div>
+            <div class="dialog-text" id="confirm-text">Deseja prosseguir?</div>
+            <div class="dialog-actions">
+                <button class="btn-dialog secondary" onclick="closeConfirm(false)">Cancelar</button>
+                <button class="btn-dialog primary" id="btn-confirm-yes">Sim</button>
+            </div>
+        </div>
+    </div>
 
     <div id="login-screen">
         <div class="login-box">
             <div class="login-logo">
                 <span class="white">AUTOCAR</span><span class="red">BS</span>
             </div>
-            <input type="email" id="login-email" class="login-input" placeholder="E-mail">
-            <input type="password" id="login-pass" class="login-input" placeholder="Senha">
-            <button class="btn-login" onclick="login()">ACESSAR SISTEMA</button>
+            <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input type="email" id="login-email" class="login-input" placeholder="exemplo@autocar.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Senha</label>
+                <input type="password" id="login-pass" class="login-input" placeholder="••••••••">
+            </div>
+            <button class="btn-login" onclick="login()">ENTRAR NO SISTEMA</button>
             <div id="login-error" class="login-error"></div>
         </div>
     </div>
@@ -163,30 +353,39 @@
         <div class="logo">
             <span class="white">AUTOCAR</span><span class="red">BS</span>
         </div>
-        <div class="avatar" onclick="logout()" title="Sair do Sistema">Sair</div>
+        <div class="header-actions">
+            <button class="icon-btn theme-toggle" onclick="toggleTheme()" title="Alternar Tema">
+                <i class="ph-fill ph-sun"></i>
+            </button>
+            <button class="icon-btn logout" onclick="logoutConfirm()" title="Sair">
+                <i class="ph-bold ph-sign-out"></i>
+            </button>
+        </div>
     </header>
 
     <div class="layout-container">
         <aside class="sidebar">
-            <button class="btn-create-large" onclick="openModal()">+ Novo Agendamento</button>
+            <button class="btn-create-large" onclick="openModal()">
+                <i class="ph-bold ph-plus"></i> Novo Agendamento
+            </button>
             <div class="mini-calendar">
                 <div class="mini-header">
                     <span id="mini-month-label">Dezembro 2025</span>
                     <div><span class="mini-nav" onclick="changeMiniMonth(-1)">❮</span><span class="mini-nav" onclick="changeMiniMonth(1)">❯</span></div>
                 </div>
                 <div class="mini-grid"><div class="mini-day-name">D</div><div class="mini-day-name">S</div><div class="mini-day-name">T</div><div class="mini-day-name">Q</div><div class="mini-day-name">Q</div><div class="mini-day-name">S</div><div class="mini-day-name">S</div></div>
-                <div id="mini-calendar-days" class="mini-grid" style="margin-top: 5px;"></div>
+                <div id="mini-calendar-days" class="mini-grid" style="margin-top: 10px;"></div>
             </div>
         </aside>
 
         <main class="main-content">
             <div id="view-weekly-list" style="display: flex; flex-direction: column; height: 100%;">
                 <div class="top-bar">
-                    <div class="week-range-label" id="week-range-label">Carregando...</div>
+                    <div class="week-range-label" id="week-range-label">...</div>
                     <div class="week-nav-btns">
-                        <button class="btn-nav-week" onclick="changeWeek(-1)">❮</button>
+                        <button class="btn-nav-week" onclick="changeWeek(-1)">❮ Anterior</button>
                         <button class="btn-nav-week" onclick="goToToday()">Hoje</button>
-                        <button class="btn-nav-week" onclick="changeWeek(1)">❯</button>
+                        <button class="btn-nav-week" onclick="changeWeek(1)">Próxima ❯</button>
                     </div>
                 </div>
                 <div class="scroll-area" id="weekly-content"></div>
@@ -195,54 +394,71 @@
             <div id="view-day-detail" style="display: none; flex-direction: column; height: 100%;">
                 <div class="top-bar">
                     <div class="week-range-label" id="day-detail-title">...</div>
-                    <div class="btn-back" onclick="showWeeklyList()">❮ Voltar para Semana</div>
+                    <button class="btn-back-style" onclick="showWeeklyList()">
+                        <i class="ph-bold ph-arrow-left"></i> Voltar para Semana
+                    </button>
                 </div>
                 <div class="scroll-area" id="day-detail-content"></div>
             </div>
-            <button class="fab-mobile" onclick="openModal()">+</button>
+            
+            <button class="fab-mobile" onclick="openModal()">
+                <i class="ph-bold ph-plus"></i>
+            </button>
         </main>
     </div>
 
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal-content">
-            <h3 style="margin-bottom: 20px;">Agendar Serviço</h3>
+            <h3 style="margin-bottom: 25px; font-size: 18px; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;" id="modal-title">Agendar Serviço</h3>
             
-            <div class="form-group">
-                <label class="form-label">Data e Hora</label>
-                <div style="display: flex; gap: 10px;">
+            <div class="form-row">
+                <div>
+                    <label class="form-label">Data</label>
                     <input type="date" id="input-date" class="form-input">
-                    <select id="input-time" class="form-select" style="flex: 1;">
-                        <option value="" disabled selected>Selecione um horário...</option>
-                        <option value="07:00">07:00 - Checklist</option>
-                        <option value="08:00">08:00 - Checklist</option>
-                        <option disabled>------------------------</option>
-                        <option value="09:00">09:00 - Execução</option>
-                        <option value="10:00">10:00 - Execução</option>
-                        <option value="11:00">11:00 - Execução</option>
-                        <option value="13:00">13:00 - Execução</option>
-                        <option value="14:00">14:00 - Execução</option>
-                        <option value="15:00">15:00 - Execução</option>
-                        <option value="16:00">16:00 - Execução</option>
-                        <option value="17:00">17:00 - Execução</option>
+                </div>
+                <div>
+                    <label class="form-label">Horário</label>
+                    <select id="input-time" class="form-select">
+                        <option value="" disabled selected>Selecione</option>
+                        <option value="07:00">07:00 ➜ Checklist</option>
+                        <option value="08:00">08:00 ➜ Checklist</option>
+                        <option disabled>──────────</option>
+                        <option value="09:00">09:00 ➜ Execução</option>
+                        <option value="10:00">10:00 ➜ Execução</option>
+                        <option value="11:00">11:00 ➜ Execução</option>
+                        <option value="12:00">12:00 ➜ Execução</option>
+                        <option value="13:00">13:00 ➜ Execução</option>
+                        <option value="14:00">14:00 ➜ Execução</option>
+                        <option value="15:00">15:00 ➜ Execução</option>
+                        <option value="16:00">16:00 ➜ Execução</option>
+                        <option value="17:00">17:00 ➜ Execução</option>
                     </select>
                 </div>
             </div>
             
-            <div class="form-group"><label class="form-label">Nome do Cliente</label><input type="text" id="input-client" class="form-input" placeholder="Ex: João da Silva"></div>
-            <div class="form-group"><label class="form-label">Veículo</label><input type="text" id="input-car" class="form-input" placeholder="Ex: Gol G5"></div>
-            <div class="form-group"><label class="form-label">Observação / Defeito</label><textarea id="input-desc" class="form-textarea" placeholder="Ex: Barulho na roda..."></textarea></div>
+            <div class="form-group">
+                <label class="form-label">Cliente</label>
+                <input type="text" id="input-client" class="form-input" placeholder="Nome do cliente">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Veículo / Placa</label>
+                <input type="text" id="input-car" class="form-input" placeholder="Ex: Golf GTI">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <textarea id="input-desc" class="form-textarea" placeholder="Detalhes..."></textarea>
+            </div>
 
-            <button type="button" class="btn-save" onclick="saveAppointment()">Confirmar Agendamento</button>
+            <button type="button" class="btn-save" id="btn-save-modal" onclick="saveAppointment()">CONFIRMAR</button>
             <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // --- CHAVES CONECTADAS ---
         const firebaseConfig = {
             apiKey: "AIzaSyBPSZquA9uEKirobLOBNLrUteLdoH86UUk",
             authDomain: "autocarbs-agenda.firebaseapp.com",
@@ -257,46 +473,82 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // --- LÓGICA DE LOGIN ---
+        // --- SISTEMA DE LOADING ---
+        window.showLoading = () => document.getElementById('global-loading').style.display = 'block';
+        window.hideLoading = () => document.getElementById('global-loading').style.display = 'none';
+
+        // --- SISTEMA DE ERROS E CONFIRMAÇÃO ---
+        window.showError = (msg, title = "Atenção") => {
+            document.getElementById('error-title').innerText = title;
+            document.getElementById('error-text').innerText = msg;
+            document.getElementById('error-modal').style.display = 'flex';
+        }
+        window.closeError = () => document.getElementById('error-modal').style.display = 'none';
+
+        let confirmCallback = null;
+        window.showConfirm = (msg, callback, title = "Confirmação") => {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-text').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('confirm-modal').style.display = 'flex';
+        }
+        window.closeConfirm = (confirmed) => {
+            document.getElementById('confirm-modal').style.display = 'none';
+            if (confirmed && confirmCallback) confirmCallback();
+            confirmCallback = null;
+        }
+        document.getElementById('btn-confirm-yes').onclick = () => closeConfirm(true);
+
+        // --- SISTEMA DE TEMA ---
+        window.toggleTheme = function() {
+            const body = document.body;
+            const themeIcon = document.querySelector('.theme-toggle i');
+            body.classList.toggle('light-mode');
+            if(body.classList.contains('light-mode')) {
+                themeIcon.classList.remove('ph-sun'); themeIcon.classList.add('ph-moon');
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeIcon.classList.remove('ph-moon'); themeIcon.classList.add('ph-sun');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        if(localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            const themeIcon = document.querySelector('.theme-toggle i');
+            themeIcon.classList.remove('ph-sun'); themeIcon.classList.add('ph-moon');
+        }
+
+        // --- LOGIN ---
         window.login = function() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            const errorDiv = document.getElementById('login-error');
-
-            if (!email || !pass) {
-                errorDiv.innerText = "Preencha e-mail e senha";
-                errorDiv.style.display = 'block';
-                return;
-            }
-
+            if (!email || !pass) { showError("Preencha e-mail e senha."); return; }
+            
+            showLoading(); // Inicia loading
             signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-                    errorDiv.style.display = 'none';
-                })
-                .catch((error) => {
-                    errorDiv.innerText = "Erro: E-mail ou senha incorretos.";
-                    errorDiv.style.display = 'block';
-                    console.error(error);
+                .catch((error) => { 
+                    hideLoading(); // Para loading em erro
+                    showError("E-mail ou senha incorretos.", "Erro de Acesso"); 
                 });
         }
-
-        window.logout = function() {
-            signOut(auth).then(() => {
-                location.reload();
-            });
+        window.logoutConfirm = function() {
+            showConfirm("Deseja realmente sair do sistema?", () => {
+                showLoading();
+                signOut(auth).then(() => location.reload());
+            }, "Sair");
         }
 
-        // Monitora Estado do Login e Inicia App
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                initFirebaseListener(); // Só carrega dados se logado
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
+            if (user) { 
+                document.getElementById('login-screen').style.display = 'none'; 
+                initFirebaseListener(); 
+            } else { 
+                document.getElementById('login-screen').style.display = 'flex'; 
+                hideLoading(); // Garante que loading pare se cair no login
             }
         });
 
-        // --- LÓGICA DA AGENDA ---
+        // --- AGENDA ---
         const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
         const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         const FULL_MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -305,167 +557,258 @@
         let appointments = [];
         let currentWeekStart = new Date(); currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
         let miniCalendarMonth = new Date();
+        let editingAppId = null;
 
         function initFirebaseListener() {
-            const dbRef = ref(db, 'agendamentos');
-            onValue(dbRef, (snapshot) => {
+            showLoading(); // Mostra loading ao começar a puxar dados
+            onValue(ref(db, 'agendamentos'), (snapshot) => {
                 const data = snapshot.val();
                 appointments = data ? Object.values(data) : [];
                 renderWeeklyList();
                 renderMiniCalendar();
+                
+                if(document.getElementById('view-day-detail').style.display === 'flex') {
+                    const visibleDate = document.getElementById('input-date').value;
+                    if(visibleDate) renderDayTimeline(visibleDate);
+                }
+                hideLoading(); // Esconde loading quando dados chegam
             });
         }
 
         window.formatDateKey = (dateObj) => dateObj.toISOString().slice(0, 10);
         window.getHolidayName = (dateObj) => { const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); const dd = String(dateObj.getDate()).padStart(2, '0'); const key = `${mm}-${dd}`; return FIXED_HOLIDAYS[key] || null; }
 
-        window.showWeeklyList = () => { document.getElementById('view-weekly-list').style.display = 'flex'; document.getElementById('view-day-detail').style.display = 'none'; renderWeeklyList(); renderMiniCalendar(); }
+        window.showWeeklyList = () => { document.getElementById('view-weekly-list').style.display = 'flex'; document.getElementById('view-day-detail').style.display = 'none'; renderWeeklyList(); }
         window.openDayDetail = (dateKey, prettyDate, dayIndex, holidayName) => {
-            if(dayIndex === 0 || dayIndex === 6) { alert('Oficina Fechada no fim de semana.'); return; }
-            if(holidayName) { alert(`Oficina Fechada: ${holidayName}`); return; }
+            const hasApps = appointments.some(a => a.date === dateKey);
+            if ((dayIndex === 0 || dayIndex === 6 || holidayName) && !hasApps) { showError("Dia fechado sem agendamentos."); return; }
+            
             document.getElementById('view-weekly-list').style.display = 'none'; document.getElementById('view-day-detail').style.display = 'flex';
-            document.getElementById('day-detail-title').innerHTML = `VISÃO DE: <span style="color:#fff">${prettyDate.toUpperCase()}</span>`;
+            document.getElementById('day-detail-title').innerHTML = `VISÃO DE: ${prettyDate.toUpperCase()}`;
+            document.getElementById('input-date').value = dateKey;
             renderDayTimeline(dateKey);
         }
         window.changeWeek = (delta) => { currentWeekStart.setDate(currentWeekStart.getDate() + (delta * 7)); renderWeeklyList(); renderMiniCalendar(); }
         window.goToToday = () => { currentWeekStart = new Date(); currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay()); renderWeeklyList(); renderMiniCalendar(); }
 
-        window.saveAppointment = () => {
-            try {
-                const dateStr = document.getElementById('input-date').value;
-                const time = document.getElementById('input-time').value;
-                const client = document.getElementById('input-client').value;
-                const car = document.getElementById('input-car').value;
-                const desc = document.getElementById('input-desc').value;
+        // --- CRUD & MODAL ---
+        window.openModal = (preDate, preTime) => {
+            editingAppId = null;
+            document.getElementById('modal-title').innerText = "Agendar Serviço";
+            document.getElementById('btn-save-modal').innerText = "CONFIRMAR AGENDAMENTO";
 
-                if(!dateStr) { alert("ERRO: Selecione a DATA do agendamento."); return; }
-                if(!time) { alert("ERRO: Selecione o HORÁRIO na lista."); return; }
-                if(!client) { alert("ERRO: Digite o NOME DO CLIENTE."); return; }
-                if(!car) { alert("ERRO: Digite o VEÍCULO."); return; }
+            if(!preDate) preDate = window.formatDateKey(new Date());
+            
+            const d = new Date(preDate + 'T00:00:00'); 
+            const hName = window.getHolidayName(d); if(hName) { showError(`Impossível agendar: ${hName}`); return; }
+            const dayIdx = d.getDay(); if(dayIdx === 0 || dayIdx === 6) { showError('Oficina fechada no fim de semana.'); return; }
 
-                const d = new Date(dateStr + 'T00:00:00');
-                const now = new Date(); now.setHours(0,0,0,0);
-                if(d < now) { alert('Não é possível agendar em datas passadas.'); return; }
-                if(window.getHolidayName(d)) { alert('Feriado.'); return; }
-                const dayIdx = d.getDay(); if(dayIdx === 0 || dayIdx === 6) { alert('Fim de semana.'); return; }
-
-                const busy = appointments.find(a => a.date === dateStr && a.time === time);
-                if(busy) { alert('Este horário já está ocupado.'); return; }
-
-                const distinctCarsToday = new Set(appointments.filter(a => a.date === dateStr).map(a => a.groupId));
-                if(distinctCarsToday.size >= 5) { alert('Limite diário de 5 carros atingido!'); return; }
-
-                const id = Date.now();
-                const newApp = { id: id, groupId: id, date: dateStr, time: time, client: client, car: car, desc: desc };
-
-                if (db) {
-                    set(ref(db, 'agendamentos/' + id), newApp).then(() => {
-                        window.closeModal();
-                        if(document.getElementById('view-day-detail').style.display !== 'none') renderDayTimeline(dateStr);
-                    }).catch(err => alert("Erro ao conectar com Firebase: " + err.message));
-                }
-
-            } catch (e) { console.error(e); alert("Erro interno no script: " + e.message); }
+            document.getElementById('modal-overlay').style.display = 'flex';
+            document.getElementById('input-date').value = preDate; 
+            document.getElementById('input-time').value = preTime || "";
+            document.getElementById('input-client').value = ''; 
+            document.getElementById('input-car').value = ''; 
+            document.getElementById('input-desc').value = '';
         }
 
-        window.deleteApp = (id) => { if(confirm('Excluir agendamento?')) { if(db) remove(ref(db, 'agendamentos/' + id)); } }
+        window.editApp = (id) => {
+            const app = appointments.find(a => a.id === id);
+            if(!app) return;
+            editingAppId = id;
+            document.getElementById('modal-title').innerText = "Editar Agendamento";
+            document.getElementById('btn-save-modal').innerText = "ATUALIZAR AGENDAMENTO";
+            
+            document.getElementById('input-date').value = app.date;
+            document.getElementById('input-time').value = app.time;
+            document.getElementById('input-client').value = app.client;
+            document.getElementById('input-car').value = app.car;
+            document.getElementById('input-desc').value = app.desc;
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
 
+        window.closeModal = () => document.getElementById('modal-overlay').style.display = 'none';
+
+        window.saveAppointment = () => {
+            const dateStr = document.getElementById('input-date').value;
+            const time = document.getElementById('input-time').value;
+            const client = document.getElementById('input-client').value;
+            const car = document.getElementById('input-car').value;
+            const desc = document.getElementById('input-desc').value;
+
+            if(!dateStr) { showError("Selecione a DATA."); return; }
+            if(!time) { showError("Selecione o HORÁRIO."); return; }
+            if(!client) { showError("Digite o NOME."); return; }
+            if(!car) { showError("Digite o VEÍCULO."); return; }
+
+            const d = new Date(dateStr + 'T00:00:00');
+            const now = new Date(); now.setHours(0,0,0,0);
+            
+            let needsValidation = true;
+            if(editingAppId) {
+                const currentApp = appointments.find(a => a.id === editingAppId);
+                if(currentApp && currentApp.date === dateStr && currentApp.time === time) needsValidation = false;
+            }
+
+            if(needsValidation) {
+                 if(d < now) { showError('Não é possível agendar em datas passadas.'); return; }
+                 if(window.getHolidayName(d)) { showError('Feriado.'); return; }
+                 const dayIdx = d.getDay(); if(dayIdx === 0 || dayIdx === 6) { showError('Fim de semana.'); return; }
+                 
+                 const busy = appointments.find(a => a.date === dateStr && a.time === time && a.id !== editingAppId);
+                 if(busy) { showError('Horário ocupado.'); return; }
+                 
+                 const distinctCarsToday = new Set(appointments.filter(a => a.date === dateStr && a.id !== editingAppId).map(a => a.groupId));
+                 if(distinctCarsToday.size >= 5) { showError('Limite diário de 5 carros atingido!'); return; }
+            }
+
+            const appData = { date: dateStr, time: time, client: client, car: car, desc: desc };
+
+            showLoading(); // Mostra loading ao salvar
+            if(editingAppId) {
+                update(ref(db, 'agendamentos/' + editingAppId), appData)
+                    .then(() => { 
+                        window.closeModal(); 
+                        if(document.getElementById('view-day-detail').style.display === 'flex') renderDayTimeline(dateStr); 
+                        // O hideLoading é automático pois o onValue dispara
+                    })
+                    .catch(err => {
+                        hideLoading();
+                        showError("Erro ao atualizar");
+                    });
+            } else {
+                const id = Date.now();
+                appData.id = id; appData.groupId = id;
+                set(ref(db, 'agendamentos/' + id), appData)
+                    .then(() => { 
+                        window.closeModal(); 
+                        if(document.getElementById('view-day-detail').style.display === 'flex') renderDayTimeline(dateStr); 
+                        // O hideLoading é automático pois o onValue dispara
+                    })
+                    .catch(err => {
+                        hideLoading();
+                        showError("Erro ao salvar");
+                    });
+            }
+        }
+
+        window.deleteAppConfirm = (id) => {
+            showConfirm("Deseja realmente excluir este agendamento?", () => {
+                showLoading(); // Loading ao excluir
+                if(db) remove(ref(db, 'agendamentos/' + id));
+                // Update detail list if visible
+                const visibleDate = document.getElementById('input-date').value; 
+                if(document.getElementById('view-day-detail').style.display === 'flex' && visibleDate) renderDayTimeline(visibleDate);
+                // hideLoading será disparado pelo listener
+            }, "Excluir");
+        }
+
+        // --- RENDERIZAÇÃO ---
         function renderWeeklyList() {
-            const container = document.getElementById('weekly-content'); container.innerHTML = '';
+            const list = document.getElementById('weekly-content'); list.innerHTML = '';
             const days = []; for(let i=0; i<7; i++) { const d = new Date(currentWeekStart); d.setDate(d.getDate() + i); days.push(d); }
-            const d1 = days[0]; const d2 = days[6]; document.getElementById('week-range-label').innerText = `${d1.getDate()} ${MONTHS[d1.getMonth()]} - ${d2.getDate()} ${MONTHS[d2.getMonth()]}`;
-            const todayKey = window.formatDateKey(new Date());
+            
+            document.getElementById('week-range-label').innerText = `${days[0].getDate()} ${MONTHS[days[0].getMonth()]} - ${days[6].getDate()} ${MONTHS[days[6].getMonth()]}`;
 
             days.forEach(date => {
                 const dateKey = window.formatDateKey(date);
-                const dayIndex = date.getDay();
-                const prettyDate = `${WEEK_DAYS[dayIndex]}, ${date.getDate()} DE ${MONTHS[date.getMonth()].toUpperCase()}`;
-                const holidayName = window.getHolidayName(date);
+                const dayApps = appointments.filter(a => a.date === dateKey).sort((a,b) => a.time.localeCompare(b.time));
+                const holiday = window.getHolidayName(date);
+                const isToday = window.formatDateKey(new Date()) === dateKey;
 
-                const headerRow = document.createElement('div'); headerRow.className = 'day-label-row'; headerRow.onclick = () => window.openDayDetail(dateKey, prettyDate, dayIndex, holidayName);
-                const labelText = document.createElement('span'); labelText.className = `day-label-text ${dateKey === todayKey ? 'today' : ''}`; labelText.innerText = prettyDate;
+                const uniqueCars = new Set(dayApps.map(a => a.groupId)).size;
+                const capacityClass = uniqueCars >= 5 ? 'full' : 'available';
+
+                const headerRow = document.createElement('div'); headerRow.className = 'day-label-row'; 
+                headerRow.onclick = () => window.openDayDetail(dateKey, `${WEEK_DAYS[date.getDay()]}, ${date.getDate()} DE ${MONTHS[date.getMonth()].toUpperCase()}`, date.getDay(), holiday);
                 
-                if(holidayName) { 
-                    const badge = document.createElement('span'); badge.className = 'holiday-badge'; badge.innerText = holidayName; labelText.appendChild(document.createTextNode(" ")); labelText.appendChild(badge); 
-                } else if (dayIndex !== 0 && dayIndex !== 6) {
-                    const uniqueCars = new Set(appointments.filter(a => a.date === dateKey).map(a => a.groupId)).size;
-                    const capBadge = document.createElement('span');
-                    capBadge.className = `capacity-badge ${uniqueCars >= 5 ? 'full' : 'available'}`;
-                    capBadge.innerText = `${uniqueCars}/5`;
-                    labelText.appendChild(capBadge);
-                }
-                const iconArrow = document.createElement('span'); iconArrow.className = 'day-label-icon'; iconArrow.innerText = '›';
-                headerRow.appendChild(labelText); headerRow.appendChild(iconArrow);
+                headerRow.innerHTML = `
+                    <div class="day-info-left">
+                        <div class="day-label-text ${isToday ? 'today' : ''}">
+                            <span>${WEEK_DAYS[date.getDay()]}, ${date.getDate()} DE ${MONTHS[date.getMonth()].toUpperCase()}</span>
+                        </div>
+                        <span class="capacity-badge ${capacityClass}">${uniqueCars}/5</span>
+                        ${isToday ? `<span class="badge-today">HOJE</span>` : ''}
+                        ${holiday ? `<span class="holiday-badge">${holiday}</span>` : ''}
+                    </div>
+                    <i class="ph-bold ph-caret-right" style="color:var(--text-muted)"></i>
+                `;
 
                 const contentArea = document.createElement('div'); contentArea.className = 'day-content-area';
-                const dayApps = appointments.filter(a => a.date === dateKey).sort((a,b) => a.time.localeCompare(b.time));
-
-                if (holidayName) { contentArea.innerHTML = `<div class="holiday-day-msg">Feriado: ${holidayName} (Fechado)</div>`; }
-                else if (dayIndex === 0 || dayIndex === 6) { contentArea.innerHTML = `<div class="closed-day-msg">Oficina Fechada</div>`; }
-                else if (dayApps.length === 0) { contentArea.innerHTML = `<div class="empty-day-msg">Nenhum agendamento</div>`; }
-                else {
-                    dayApps.forEach(app => {
-                        const card = document.createElement('div'); 
-                        const isChecklist = (app.time === '07:00' || app.time === '08:00');
-                        card.className = `agenda-card ${isChecklist ? 'checklist' : ''}`;
-                        const obsHtml = app.desc ? `<div class="obs-info">${app.desc}</div>` : '';
-                        const checkLabel = isChecklist ? `<span class="badge-checklist">CHECKLIST</span>` : '';
-
-                        card.innerHTML = `
-                            <div class="card-strip"></div>
-                            <div class="card-time-box">${app.time}</div>
-                            <div class="card-info-box">
-                                <div class="client-name">${app.client} ${checkLabel}</div>
-                                <div class="car-info">${app.car}</div>
-                                ${obsHtml}
-                            </div>
-                            <div class="card-actions">
-                                <div class="btn-delete-icon" onclick="deleteApp(${app.id})">✖</div>
-                            </div>
-                        `;
-                        contentArea.appendChild(card);
-                    });
+                
+                if (holiday) {
+                    contentArea.innerHTML = `<div class="holiday-day-msg">Feriado (Fechado)</div>`;
+                    if(dayApps.length > 0) contentArea.innerHTML += renderAppsHtml(dayApps);
+                } else if (date.getDay() === 0 || date.getDay() === 6) {
+                    contentArea.innerHTML = `<div class="closed-day-msg">Oficina Fechada</div>`;
+                    if(dayApps.length > 0) contentArea.innerHTML += renderAppsHtml(dayApps);
+                } else if (dayApps.length === 0) {
+                    contentArea.innerHTML = `<div class="empty-day-msg">Nenhum agendamento</div>`;
+                } else {
+                    contentArea.innerHTML = renderAppsHtml(dayApps);
                 }
-                const group = document.createElement('div'); group.className = 'day-group'; group.appendChild(headerRow); group.appendChild(contentArea); container.appendChild(group);
+
+                const group = document.createElement('div'); group.className = 'day-group'; 
+                group.appendChild(headerRow); group.appendChild(contentArea); list.appendChild(group);
             });
         }
 
-        function renderDayTimeline(dateKey) {
-            const container = document.getElementById('day-detail-content'); container.innerHTML = '';
-            const dayApps = appointments.filter(a => a.date === dateKey);
-            const ALL_SLOTS = ['07:00', '08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+        function renderAppsHtml(apps) {
+            return apps.map(app => {
+                const isCheck = (app.time === '07:00' || app.time === '08:00');
+                return `
+                <div class="agenda-card ${isCheck ? 'checklist' : ''}">
+                    <div class="card-strip"></div>
+                    <div class="card-time-box">${app.time}</div>
+                    <div class="card-info-box">
+                        <div class="client-name">${app.client} <span class="badge-checklist-card" style="display:${isCheck?'inline-block':'none'}">CHECK</span></div>
+                        <div class="car-info">${app.car}</div>
+                        ${app.desc ? `<div class="obs-info"><i class="ph-fill ph-chat-circle-text"></i> ${app.desc}</div>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <div class="icon-btn-small edit" onclick="editApp(${app.id})" title="Editar"><i class="ph-bold ph-pencil-simple"></i></div>
+                        <div class="icon-btn-small delete" onclick="deleteAppConfirm(${app.id})" title="Excluir"><i class="ph-bold ph-trash"></i></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
-            ALL_SLOTS.forEach(time => {
+        function renderDayTimeline(dateKey) {
+            const list = document.getElementById('day-detail-content'); list.innerHTML = '';
+            const dayApps = appointments.filter(a => a.date === dateKey);
+            const slots = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+
+            slots.forEach(time => {
                 const app = dayApps.find(a => a.time === time);
                 const row = document.createElement('div'); row.className = 'timeline-slot';
-                row.innerHTML = `<div class="ts-time">${time}</div>`;
-                const contentDiv = document.createElement('div'); contentDiv.className = 'ts-content';
-
+                
+                let content = '';
                 if(app) {
-                    const isChecklist = (app.time === '07:00' || app.time === '08:00');
-                    const obsHtml = app.desc ? `<div class="obs-info">${app.desc}</div>` : '';
-                    const checkLabel = isChecklist ? `<span class="badge-checklist">CHECKLIST</span>` : '';
-
-                    contentDiv.innerHTML = `
-                        <div class="agenda-card ${isChecklist ? 'checklist' : ''}" style="margin:0">
+                    const isCheck = (time === '07:00' || time === '08:00');
+                    content = `
+                        <div class="agenda-card ${isCheck ? 'checklist' : ''}" style="margin:0; width:100%">
                             <div class="card-strip"></div>
                             <div class="card-info-box" style="padding-left:15px">
-                                <div class="client-name">${app.client} ${checkLabel}</div>
+                                <div class="client-name">${app.client}</div>
                                 <div class="car-info">${app.car}</div>
-                                ${obsHtml}
+                                ${app.desc ? `<div class="obs-info">${app.desc}</div>` : ''}
                             </div>
                             <div class="card-actions">
-                                <div class="btn-delete-icon" onclick="deleteApp(${app.id})">✖</div>
+                                <div class="icon-btn-small edit" onclick="editApp(${app.id})"><i class="ph-bold ph-pencil-simple"></i></div>
+                                <div class="icon-btn-small delete" onclick="deleteAppConfirm(${app.id})"><i class="ph-bold ph-trash"></i></div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 } else {
-                    const isChecklistSlot = (time === '07:00' || time === '08:00');
-                    const text = isChecklistSlot ? '+ Agendar Checklist' : '+ Disponível';
-                    const extraClass = isChecklistSlot ? 'checklist-slot' : '';
-                    contentDiv.innerHTML = `<div class="slot-free ${extraClass}" onclick="openModal('${dateKey}', '${time}')">${text}</div>`;
+                    const isCheck = (time === '07:00' || time === '08:00');
+                    const label = isCheck ? '+ Agendar Checklist' : '+ Disponível';
+                    const styleClass = isCheck ? 'checklist-style' : 'default-style';
+                    
+                    content = `<div class="slot-free ${styleClass}" onclick="openModal('${dateKey}', '${time}')" style="width:100%">
+                        ${label}
+                    </div>`;
                 }
-                row.appendChild(contentDiv); container.appendChild(row);
+                
+                row.innerHTML = `<div class="ts-time">${time}</div><div class="ts-content">${content}</div>`;
+                list.appendChild(row);
             });
         }
 
@@ -487,26 +830,6 @@
             }
         }
         window.changeMiniMonth = (delta) => { miniCalendarMonth.setMonth(miniCalendarMonth.getMonth() + delta); renderMiniCalendar(); }
-
-        window.openModal = (preDate, preTime) => {
-            if(!preDate) preDate = window.formatDateKey(new Date());
-            const d = new Date(preDate + 'T00:00:00'); 
-            const hName = window.getHolidayName(d); if(hName) { alert(`Impossível agendar: ${hName}`); return; }
-            const dayIdx = d.getDay(); if(dayIdx === 0 || dayIdx === 6) { alert('Oficina fechada no fim de semana.'); return; }
-
-            document.getElementById('modal-overlay').style.display = 'flex';
-            document.getElementById('input-date').value = preDate; 
-            if(preTime) {
-                document.getElementById('input-time').value = preTime;
-            } else {
-                document.getElementById('input-time').value = "";
-            }
-            document.getElementById('input-client').value = ''; 
-            document.getElementById('input-car').value = ''; 
-            document.getElementById('input-desc').value = '';
-        }
-        window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; }
-
     </script>
 </body>
 </html>
